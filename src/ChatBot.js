@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ChatBot.module.css';
 
-const ChatBot = () => {
+const ChatBot = ({existingConversation, readOnly, hh}) => {
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
@@ -14,9 +14,15 @@ const ChatBot = () => {
       ],
     },
   ]);
+
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+useEffect(()=>{
 
+  if (existingConversation && existingConversation.length > 0) {
+    setMessages(existingConversation);
+  }
+}, [existingConversation])
   useEffect(() => {
     if (!localStorage.getItem('session')) {
       function generateUUID() {
@@ -46,7 +52,7 @@ const ChatBot = () => {
 
     setMessages(newMessages);
     setInput('');
-    setIsLoading(true);
+setTimeout(() => setIsLoading(true), 1000);
 
     try {
       // Send to backend
@@ -85,7 +91,7 @@ const ChatBot = () => {
   };
 
   return (
-    <div className={styles.chatContainer}>
+    <div className={styles.chatContainer} style={{height: hh || '100vh'}}>
       <div className={styles.chatHeader}>
         <img src="https://i.ibb.co/YXxXr72/bot-avatar.png" alt="Bot Avatar" />
         <strong>Kloowear AI Assistant</strong>
@@ -145,7 +151,7 @@ const ChatBot = () => {
         ))}
       </div>
 
-      <div className={styles.chatInput}>
+      <div className={styles.chatInput} style={{visibility: readOnly? 'hidden': 'visible', marginTop: readOnly? '-59px' : '0px'}}>
         <input
           type="text"
           placeholder="Ketik pesan..."
