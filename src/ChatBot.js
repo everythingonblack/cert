@@ -5,12 +5,12 @@ const ChatBot = ({existingConversation, readOnly, hh}) => {
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: 'Halo 👋 Saya Kloowear AI! Ada yang bisa saya bantu?',
+      text: 'Halo 👋 Saya Klinik AI! Ada yang bisa saya bantu?',
       time: getTime(),
       quickReplies: [
-        'Saya ingin beli gelang custom',
-        'Ada katalog produk terbaru?',
-        'Gelang cocok untuk hadiah?',
+        'Gigi saya sakit',
+        'Saya mengalami pusing',
+        'Perutku mual dan kembung',
       ],
     },
   ]);
