@@ -46,8 +46,8 @@ useEffect(()=>{
 
     // Show user's message immediately
     const newMessages = [
-      { sender: 'user', text: message, time: getTime() },
       ...messages,
+      { sender: 'user', text: message, time: getTime() },
     ];
 
     setMessages(newMessages);
@@ -72,17 +72,17 @@ setTimeout(() => setIsLoading(true), 1000);
 
       // Add bot's reply
       setMessages(prev => [
-        { sender: 'bot', text: botAnswer, time: getTime() },
         ...prev,
+        { sender: 'bot', text: botAnswer, time: getTime() },
       ]);
     } catch (error) {
       setMessages(prev => [
+        ...prev,
         {
           sender: 'bot',
           text: 'Maaf, terjadi kesalahan pada server. Silakan coba lagi nanti.',
           time: getTime(),
         },
-        ...prev,
       ]);
       console.error('Fetch error:', error);
     } finally {
