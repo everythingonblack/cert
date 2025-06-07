@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ChatBot.module.css';
 
-const ChatBot = ({existingConversation, readOnly, hh}) => {
+const ChatBot = ({ existingConversation, readOnly, hh }) => {
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
       text: 'Halo 👋 Saya Klinik AI! Ada yang bisa saya bantu?',
       time: getTime(),
       quickReplies: [
-        'Gigi saya sakit',
-        'Saya mengalami pusing',
+        'Bagaimana menghilangkan komedo',
+        'Apakah bisa menghilangkan bopeng?',
         'Perutku mual dan kembung',
       ],
     },
@@ -17,12 +17,12 @@ const ChatBot = ({existingConversation, readOnly, hh}) => {
 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-useEffect(()=>{
+  useEffect(() => {
 
-  if (existingConversation && existingConversation.length > 0) {
-    setMessages(existingConversation);
-  }
-}, [existingConversation])
+    if (existingConversation && existingConversation.length > 0) {
+      setMessages(existingConversation);
+    }
+  }, [existingConversation])
   useEffect(() => {
     if (!localStorage.getItem('session')) {
       function generateUUID() {
@@ -36,7 +36,7 @@ useEffect(()=>{
       const sessionId = generateUUID();
       const dateNow = new Date().toISOString();
 
-      localStorage.setItem('session', JSON.stringify({ sessionId: sessionId, lastSeen: dateNow}))
+      localStorage.setItem('session', JSON.stringify({ sessionId: sessionId, lastSeen: dateNow }))
     }
   }, []);
 
@@ -52,7 +52,7 @@ useEffect(()=>{
 
     setMessages(newMessages);
     setInput('');
-setTimeout(() => setIsLoading(true), 1000);
+    setTimeout(() => setIsLoading(true), 1000);
 
     try {
       // Send to backend
@@ -91,7 +91,7 @@ setTimeout(() => setIsLoading(true), 1000);
   };
 
   return (
-    <div className={styles.chatContainer} style={{height: hh || '100vh'}}>
+    <div className={styles.chatContainer} style={{ height: hh || '100vh' }}>
       <div className={styles.chatHeader}>
         <img src="https://i.ibb.co/YXxXr72/bot-avatar.png" alt="Bot Avatar" />
         <strong>Kloowear AI Assistant</strong>
@@ -111,7 +111,7 @@ setTimeout(() => setIsLoading(true), 1000);
             </div>
           </div>
         )}
-        {messages.map((msg, index) => (
+        {messages.slice().reverse().map((msg, index) => (
           <div
             key={index}
             className={`${styles.messageRow} ${styles[msg.sender]}`}
@@ -151,7 +151,7 @@ setTimeout(() => setIsLoading(true), 1000);
         ))}
       </div>
 
-      <div className={styles.chatInput} style={{visibility: readOnly? 'hidden': 'visible', marginTop: readOnly? '-59px' : '0px'}}>
+      <div className={styles.chatInput} style={{ visibility: readOnly ? 'hidden' : 'visible', marginTop: readOnly ? '-59px' : '0px' }}>
         <input
           type="text"
           placeholder="Ketik pesan..."
