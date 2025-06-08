@@ -39,6 +39,7 @@
   display: flex;
   margin-bottom: 12px;
   align-items: flex-end;
+  width: 100%;
 }
 
 .bot {

@@ -8,8 +8,8 @@ const ChatBot = ({existingConversation, readOnly, hh}) => {
       text: 'Halo 👋 Saya Klinik AI! Ada yang bisa saya bantu?',
       time: getTime(),
       quickReplies: [
-        'Gigi saya sakit',
-        'Saya mengalami pusing',
+        'Bagaimana menghilangkan komedo',
+        'Apakah bisa menghilangkan bopeng?',
         'Perutku mual dan kembung',
       ],
     },
@@ -52,14 +52,15 @@ useEffect(()=>{
 
     setMessages(newMessages);
     setInput('');
-setTimeout(() => setIsLoading(true), 1000);
+    setTimeout(() => setIsLoading(true), 1000);
+    const messagesToSend = newMessages.slice(1);
 
     try {
       // Send to backend
       const response = await fetch('https://n8n.kediritechnopark.my.id/webhook/master-agent/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pertanyaan: newMessages, sessionId: JSON.parse(localStorage.getItem('session')).sessionId, lastSeen: new Date().toISOString() }),
+        body: JSON.stringify({ pertanyaan: messagesToSend, sessionId: JSON.parse(localStorage.getItem('session')).sessionId, lastSeen: new Date().toISOString() }),
       });
 
       if (!response.ok) throw new Error('Network response was not ok');
@@ -111,7 +112,7 @@ setTimeout(() => setIsLoading(true), 1000);
             </div>
           </div>
         )}
-        {messages.map((msg, index) => (
+        {messages.slice().reverse().map((msg, index) => (
           <div
             key={index}
             className={`${styles.messageRow} ${styles[msg.sender]}`}
