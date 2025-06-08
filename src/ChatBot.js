@@ -57,7 +57,7 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
 
     try {
       // Send to backend
-      const response = await fetch('https://n8n.kediritechnopark.my.id/webhook/master-agent/ask', {
+      const response = await fetch('https://botdev.kediritechnopark.com/webhook/master-agent/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pertanyaan: messagesToSend, sessionId: JSON.parse(localStorage.getItem('session')).sessionId, lastSeen: new Date().toISOString() }),
@@ -69,7 +69,7 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
       console.log(data)
       // Assuming your backend sends back something like: { answer: "text" }
       // Adjust this according to your actual response shape
-      const botAnswer = data[0].output || 'Maaf, saya tidak mengerti.';
+      const botAnswer = data[0].jawaban || data.output || data[0].output || 'Maaf, saya tidak mengerti.';
 
       // Add bot's reply
       setMessages(prev => [
