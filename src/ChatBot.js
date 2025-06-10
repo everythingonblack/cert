@@ -53,14 +53,13 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
     setMessages(newMessages);
     setInput('');
     setTimeout(() => setIsLoading(true), 1000);
-    const messagesToSend = newMessages.slice(1);
 
     try {
       // Send to backend
       const response = await fetch('https://botdev.kediritechnopark.com/webhook/master-agent/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pertanyaan: messagesToSend, sessionId: JSON.parse(localStorage.getItem('session')).sessionId, lastSeen: new Date().toISOString() }),
+        body: JSON.stringify({ pertanyaan: message, sessionId: JSON.parse(localStorage.getItem('session')).sessionId, lastSeen: new Date().toISOString() }),
       });
 
       if (!response.ok) throw new Error('Network response was not ok');
