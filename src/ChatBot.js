@@ -62,19 +62,19 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
         body: JSON.stringify({ pertanyaan: message, sessionId: JSON.parse(localStorage.getItem('session')).sessionId, lastSeen: new Date().toISOString() }),
       });
 
-      if (!response.ok) throw new Error('Network response was not ok');
-
       const data = await response.json();
       console.log(data)
       // Assuming your backend sends back something like: { answer: "text" }
       // Adjust this according to your actual response shape
-      const botAnswer = data[0].jawaban || data.output || data[0].output || 'Maaf, saya tidak mengerti.';
+      const botAnswer = data[0].output || data[0].output[0].text || 'Maaf, saya tidak mengerti.';
 
       // Add bot's reply
       setMessages(prev => [
         ...prev,
         { sender: 'bot', text: botAnswer, time: getTime() },
       ]);
+
+      setIsLoading(false);
     } catch (error) {
       setMessages(prev => [
         ...prev,
@@ -88,6 +88,7 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
     } finally {
       setIsLoading(false);
     }
+      setIsLoading(false);
   };
 
   return (
