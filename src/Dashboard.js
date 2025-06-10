@@ -128,9 +128,9 @@ const Dashboard = () => {
   return (
     <div className={styles.dashboardContainer}>
       <div className={styles.dashboardHeader}>
-        <img src="https://i.ibb.co/YXxXr72/bot-avatar.png" alt="Bot Avatar" />
+        <img src="/dermalounge.jpg" alt="Bot Avatar" />
         <div>
-          <h1>Kloowear AI Admin Dashboard</h1>
+          <h1>Dermalounge AI Admin Dashboard</h1>
           <p>Statistik penggunaan chatbot secara real-time</p>
         </div>
       </div>
@@ -159,6 +159,10 @@ const Dashboard = () => {
         <canvas ref={chartRef}></canvas>
       </div>
 
+      <div className={styles.footer}>
+        UNTUK MENAMBAHKAN LAYANAN, KUNJUNGI <a href="https://drive.kediritechnopark.com">LINK INI</a>
+ dengan username: dermalounge, password: 1234
+      </div>
       <div className={styles.footer}>
         &copy; 2025 Kloowear AI - Admin Panel
       </div>
