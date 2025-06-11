@@ -6,6 +6,7 @@ import TenantDashboard from './TenantDashboard';
 import ChatBot from './ChatBot';
 
 import './App.css';
+import Login from './Login';
 
 function App() {
   function ChatBotWrapper() {
@@ -41,9 +42,9 @@ function App() {
     <div className='App'>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/dashboard" element={<TenantDashboard />} />
-        <Route path="/:tenantId" element={<ChatBotWrapper />} />
+        <Route path="/" element={<ChatBotWrapper />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </BrowserRouter>
     </div>
