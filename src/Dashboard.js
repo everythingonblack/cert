@@ -38,7 +38,6 @@ const Dashboard = () => {
       try {
         const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/dashboard');
         const data = await response.json();
-        setRawData(data)
 
         setRawData(data);
 
