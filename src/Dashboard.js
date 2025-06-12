@@ -37,8 +37,7 @@ const Dashboard = () => {
       try {
         const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/dashboard');
         const data = await response.json();
-        setDiscussedTopics(data[0].result.topics)
-        console.log(data[0].result.topics[0].topic)
+        setDiscussedTopics(data[0]?.result?.topics)
 
         const graphObj = data[0].result.graph;
         const rawDataArray = Object.entries(graphObj).map(([hour, sesi]) => ({
