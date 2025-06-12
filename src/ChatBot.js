@@ -5,12 +5,12 @@
     const [messages, setMessages] = useState([
       {
         sender: 'bot',
-        text: 'Halo 👋 Saya Klinik AI! Ada yang bisa saya bantu?',
+        text: 'Hai Dermalounge friends! 👋 Saya siap membantu anda tampil lebih percaya diri. Ada pertanyaan seputar perawatan kulit atau kecantikan hari ini?',
         time: getTime(),
         quickReplies: [
-          'Bagaimana menghilangkan komedo',
-          'Apakah bisa menghilangkan bopeng?',
-          'Perutku mual dan kembung',
+          'List harga layanan Dermalounge',
+          'Beri saya info jadwal dokter',
+          'Apa saja layanan disini',
         ],
       },
     ]);
@@ -112,7 +112,20 @@
               className={`${styles.messageRow} ${styles[msg.sender]}`}
             >
               <div className={`${styles.message} ${styles[msg.sender]}`}>
-                {msg.text}
+                {msg.sender !== 'bot' 
+  ? msg.text 
+  : (() => {
+    try {let cleanText = msg.text.replace(/`/g, '');  // Remove backticks
+cleanText = cleanText.substring(4);  // Remove first 4 characters
+let parsedObj = JSON.parse(cleanText);
+
+return parsedObj.jawaban;
+} catch (e) {
+  console.error("JSON parsing error:", e);  // Log error parsing if it occurs
+  return msg.text;  // Return an empty string if there is an error
+}
+
+    })()}
                 {msg.quickReplies && (
                   <div className={styles.quickReplies}>
                     {msg.quickReplies.map((reply, i) => (
