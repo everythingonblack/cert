@@ -8,7 +8,7 @@ const DiscussedTopics = ({ topics }) => {
       <h2>Topik yang Sering Ditanyakan</h2>
       <ul>
         {topics.map((topic, idx) => (
-          <li key={idx}><strong>{topic.topic}</strong> - {topic.question_count} pertanyaan</li>
+          <li key={idx}><strong>{topic.topic}</strong> - {topic.count} kali</li>
         ))}
       </ul>
     </div>
