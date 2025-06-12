@@ -3,6 +3,26 @@
   color: white;
 }
 
+.uploadContainer {
+  margin-top: 16px;
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.uploadContainer:hover {
+  border-color: #888;
+}
+
+.uploadLink {
+  color: #007bff;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .dashboardContainer {
   max-width: 900px;
   margin: 30px auto;
@@ -66,4 +86,61 @@
   margin-top: 30px;
   font-size: 13px;
   color: #777;
+}
+
+.desktopText {
+  display: block;
+}
+
+.mobileText {
+  display: none;
+}
+
+.dragActive {
+  background-color: #e0f7fa; /* light blue or whatever color you prefer */
+  border-color: #00acc1;     /* optional: change border on drag too */
+}
+
+.fileInfo {
+  margin-top: 16px;
+  font-size: 14px;
+  color: #333;
+  background: #f1f1f1;
+  padding: 8px 12px;
+  border-radius: 8px 0 0 8px;
+  display: inline-block;
+}
+
+.fileInfoClose {
+  margin-left: 2px;
+  margin-top: 16px;
+  font-size: 14px;
+  color: #ff0000;
+  font-weight: 700;
+  background: #f1f1f1;
+  padding: 8px 12px;
+  border-radius: 0 8px 8px 0;
+  display: inline-block;
+
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+
+.dashboardContainer {
+  max-width: 900px;
+  margin: 30px auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: none;
+  padding: 20px;
+}
+
+  .desktopText {
+    display: none;
+  }
+
+  .mobileText {
+    display: block;
+  }
 }

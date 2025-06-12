@@ -55,7 +55,7 @@
 
       try {
         // Send to backend
-        const response = await fetch('https://botdev.kediritechnopark.com/webhook/master-agent/ask', {
+        const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pertanyaan: message, sessionId: JSON.parse(localStorage.getItem('session')).sessionId, lastSeen: new Date().toISOString() }),

@@ -14,21 +14,56 @@ const Dashboard = () => {
   const [discussedTopics, setDiscussedTopics] = useState([]);
   const [modalContent, setModalContent] = useState(null);
   const [rawData, setRawData] = useState([]);
+  
+  const [stats, setStats] = useState({
+  totalChats: 0,
+  userMessages: 0,
+  botMessages: 0,
+  mostDiscussedTopics: '-',
+});
 
-  const stats = {
-    totalChats: 0,
-    userMessages: 0,
-    botMessages: 0,
-    activeNow: 0,
-    mostDiscussedTopics: '-',
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const handleFile = (file) => {
+    if (file) {
+      setSelectedFile(file);
+    }
   };
+
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const response = await fetch('https://botdev.kediritechnopark.com/webhook/master-agent/dashboard');
+        const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/dashboard');
         const data = await response.json();
         setRawData(data)
+
+        setRawData(data);
+
+        // Hitung statistik
+        let totalSessions = new Set(); // unik session_id
+        let userMessages = 0;
+        let botMessages = 0;
+
+        data.forEach(({ sesi }) => {
+          Object.entries(sesi).forEach(([channel, messages]) => {
+            messages.forEach((msg) => {
+              totalSessions.add(msg.session_id);
+              if (msg.message.type === 'human') userMessages++;
+              if (msg.message.type === 'ai') botMessages++;
+            });
+          });
+        });
+
+        setStats({
+          totalChats: totalSessions.size,
+          userMessages,
+          botMessages,
+          mostDiscussedTopics: '-', // placeholder, bisa ditambah nanti
+        });
+
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
       }
@@ -46,75 +81,90 @@ const Dashboard = () => {
   };
 
 
-  useEffect(() => {
-    const ctx = chartRef.current?.getContext('2d');
-    if (!ctx) return;
+useEffect(() => {
+  if (!rawData.length) return;
 
-    // Cleanup old chart if it exists
-    if (chartInstanceRef.current) {
-      chartInstanceRef.current.destroy();
-    }
+  const ctx = chartRef.current?.getContext('2d');
+  if (!ctx) return;
 
-    const prefixes = ['WEB', 'WAP', 'DME'];
-    const prefixLabelMap = {
-      WEB: 'Web App',
-      WAP: 'WhatsApp',
-      DME: 'Direct Message',
-    };
-    const prefixColors = {
-      WEB: { border: '#4285F4', background: 'rgba(66, 133, 244, 0.2)' },
-      WAP: { border: '#25D366', background: 'rgba(37, 211, 102, 0.2)' },
-      DME: { border: '#AA00FF', background: 'rgba(170, 0, 255, 0.2)' },
-    };
+  if (chartInstanceRef.current) {
+    chartInstanceRef.current.destroy();
+  }
 
-    const hours = [...new Set(rawData.map(d => d.hour_group))].sort();
+  const prefixLabelMap = {
+    WEB: 'Web App',
+    WAP: 'WhatsApp',
+    DME: 'Instagram',
+  };
 
-    // Initialize zero-filled data structure
-    const counts = {
-      WEB: hours.map(() => 0),
-      WAP: hours.map(() => 0),
-      DME: hours.map(() => 0)
-    };
+  const prefixColors = {
+    WEB: { border: '#4285F4', background: 'rgba(66, 133, 244, 0.2)' },
+    WAP: { border: '#25D366', background: 'rgba(37, 211, 102, 0.2)' },
+    DME: { border: '#AA00FF', background: 'rgba(170, 0, 255, 0.2)' },
+  };
 
-    rawData.forEach(({ hour_group, session_prefix, session_ids }) => {
-      const hourIndex = hours.indexOf(hour_group);
-      if (counts[session_prefix] && hourIndex !== -1) {
-        counts[session_prefix][hourIndex] += session_ids.length;
+  const prefixes = Object.keys(prefixLabelMap);
+
+  // Ambil semua grub (jam)
+  const hours = rawData.map(d => d.grub).sort((a, b) => parseFloat(a) - parseFloat(b));
+
+  // Inisialisasi data per platform
+  const counts = {};
+  prefixes.forEach(prefix => {
+    counts[prefix] = hours.map(() => 0);
+  });
+
+  // Hitung jumlah pesan berdasarkan panjang array per grub & prefix
+  rawData.forEach((entry, index) => {
+    const sesi = entry.sesi || {};
+    prefixes.forEach(prefix => {
+      if (Array.isArray(sesi[prefix])) {
+        counts[prefix][index] = sesi[prefix].length;
       }
     });
+  });
 
-    const datasets = prefixes.map(prefix => ({
-      label: prefixLabelMap[prefix],
-      data: counts[prefix],
-      borderColor: prefixColors[prefix].border,
-      backgroundColor: prefixColors[prefix].background,
-      fill: true,
-      tension: 0.3
-    }));
+  const datasets = prefixes.map(prefix => ({
+    label: prefixLabelMap[prefix],
+    data: counts[prefix],
+    borderColor: prefixColors[prefix].border,
+    backgroundColor: prefixColors[prefix].background,
+    fill: true,
+    tension: 0.3,
+  }));
 
-    chartInstanceRef.current = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: hours,
-        datasets
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            display: true,
-            position: 'bottom'
-          }
+  chartInstanceRef.current = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: hours,
+      datasets,
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom',
         },
-        scales: {
-          y: {
-            beginAtZero: true
-          }
-        }
-      }
-    });
-
-  }, [rawData]);
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Jumlah Pesan',
+          },
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Jam',
+          },
+        },
+      },
+    },
+  });
+}, [rawData]);
 
   return (
     <div className={styles.dashboardContainer}>
@@ -150,13 +200,56 @@ const Dashboard = () => {
         <canvas ref={chartRef}></canvas>
       </div>
 
-      <div className={styles.chartSection}>
-        <h2 className={styles.chartTitle}>Grafik request booking</h2>
-        <canvas></canvas>
+
+    <div className={styles.chartSection}>
+      <h2 className={styles.chartTitle}>Update data</h2>
+
+      <div
+        className={`${styles.uploadContainer} ${isDragging ? styles.dragActive : ""}`}
+        onClick={() => selectedFile ? null : document.getElementById("fileInput").click()}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setIsDragging(false);
+          const file = e.dataTransfer.files[0];
+          handleFile(file);
+        }}
+      >
+        <p className={styles.desktopText}>
+          Seret file ke sini, atau <span className={styles.uploadLink}>Klik untuk unggah</span>
+        </p>
+        <p className={styles.mobileText}>Klik untuk unggah</p>
+
+        {selectedFile && (
+          <>
+          <div className={styles.fileInfo}>
+            <strong>{selectedFile.name}</strong>
+          </div>
+          <div className={styles.fileInfoClose} onClick={()=>setSelectedFile(null)}>
+            X
+          </div>
+          </>
+        )}
+
+        <input
+          id="fileInput"
+          type="file"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            const file = e.target.files[0];
+            handleFile(file);
+          }}
+        />
       </div>
+    </div>
+
 
       <div className={styles.footer}>
-        &copy; 2025 Kloowear AI - Admin Panel
+        &copy; 2025 Kediri Technopark
       </div>
 
       {modalContent && <Modal onClose={() => setModalContent(null)}>{modalContent}</Modal>}
