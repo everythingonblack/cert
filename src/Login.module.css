@@ -48,7 +48,7 @@
 }
 
 .button {
-  background-color: #4285F4;
+  background-color: #337f83;
   color: white;
   border: none;
   padding: 12px;
@@ -58,7 +58,7 @@
 }
 
 .button:hover {
-  background-color: #3367D6;
+  background-color: #3c9a9f;
 }
 
 .error {

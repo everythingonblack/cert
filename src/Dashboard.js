@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import styles from './Dashboard.module.css';
+import { useNavigate } from 'react-router-dom';
 
 import Modal from './Modal';
 import Conversations from './Conversations';
@@ -21,9 +22,10 @@ const Dashboard = () => {
     botMessages: 0,
   });
 
-
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleFile = (file) => {
     if (file) {
@@ -31,11 +33,21 @@ const Dashboard = () => {
     }
   };
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.reload(); // Bisa juga: window.location.href = '/login';
+  };
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/dashboard');
+        const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/dashboard/dev');
         const data = await response.json();
         setDiscussedTopics(data[0]?.result?.topics)
 
@@ -59,7 +71,6 @@ const Dashboard = () => {
           });
         });
 
-
         setStats({
           totalChats: totalSessions.size,
           userMessages,
@@ -74,6 +85,45 @@ const Dashboard = () => {
     fetchStats();
   }, []);
 
+const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem('token');
+
+      try {
+        const response = await fetch('https://bot.kediritechnopark.com/webhook/profile/dev', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          // Token tidak valid atau tidak punya akses, redirect ke login
+          localStorage.removeItem('token'); // Hapus token agar bersih
+          navigate('/login');
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error('Fetch gagal dengan status: ' + response.status);
+        }
+
+        const data = await response.json();
+        console.log(data);
+        // lanjutkan penggunaan data
+      } catch (error) {
+        console.error('Error:', error);
+        // Bisa juga redirect ke login kalau error tertentu
+        navigate('/login');
+      }
+    };
+
+    fetchData();
+  }, [navigate]);
+
   const openConversationsModal = () => {
     setModalContent(<Conversations conversations={conversations} />);
   };
@@ -81,7 +131,6 @@ const Dashboard = () => {
   const openTopicsModal = () => {
     setModalContent(<DiscussedTopics topics={discussedTopics} />);
   };
-
 
   useEffect(() => {
     if (!rawData.length) return;
@@ -120,7 +169,6 @@ const Dashboard = () => {
         }
       });
     });
-
 
     const datasets = prefixes.map(prefix => ({
       label: prefixLabelMap[prefix],
@@ -167,6 +215,11 @@ const Dashboard = () => {
   return (
     <div className={styles.dashboardContainer}>
       <div className={styles.dashboardHeader}>
+        {isLoggedIn ? (
+          <button onClick={handleLogout} className={styles.logoutButton}>Logout</button>
+        ) : (
+          <a href="/login" className={styles.loginButton}>Login</a>
+        )}
         <img src="/dermalounge.jpg" alt="Bot Avatar" />
         <div>
           <h1 className={styles.h1}>Dermalounge AI Admin Dashboard</h1>
@@ -197,7 +250,6 @@ const Dashboard = () => {
         <h2 className={styles.chartTitle}>Grafik Interaksi</h2>
         <canvas ref={chartRef}></canvas>
       </div>
-
 
       <div className={styles.chartSection}>
         <h2 className={styles.chartTitle}>Update data</h2>
@@ -244,7 +296,6 @@ const Dashboard = () => {
           />
         </div>
       </div>
-
 
       <div className={styles.footer}>
         &copy; 2025 Kediri Technopark

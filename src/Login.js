@@ -13,13 +13,47 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.username === 'dermalounge' && formData.password === '1234') {
-      window.location.href = '/dashboard'; // redirect after successful login
-    } else {
-      setError('Username atau password salah');
+    try {
+      const loginResponse = await fetch('https://bot.kediritechnopark.com/webhook/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const loginDataRaw = await loginResponse.json();
+      const loginData = Array.isArray(loginDataRaw) ? loginDataRaw[0] : loginDataRaw;
+
+      if (loginData?.success && loginData?.token) {
+        localStorage.setItem('token', loginData.token);
+
+        const profileResponse = await fetch('https://bot.kediritechnopark.com/webhook/profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${loginData.token}`
+          }
+        });
+
+        const profileDataRaw = await profileResponse.json();
+        const profileData = Array.isArray(profileDataRaw) ? profileDataRaw[0] : profileDataRaw;
+
+        if (profileData?.success) {
+          localStorage.setItem('user', JSON.stringify(profileData.user));
+          window.location.href = '/dashboard';
+        } else {
+          setError('Token tidak valid');
+        }
+      } else {
+        setError(loginData?.message || 'Username atau password salah');
+      }
+    } catch (err) {
+      console.error('Login Error:', err);
+      setError('Gagal terhubung ke server');
     }
   };
 
