@@ -5,7 +5,7 @@
     const [messages, setMessages] = useState([
       {
         sender: 'bot',
-        text: 'Hai Dermalounge friends! 👋 Saya siap membantu anda tampil lebih percaya diri. Ada pertanyaan seputar perawatan kulit atau kecantikan hari ini?',
+        text: 'Hai Dermalovers! 👋 Saya siap membantu anda tampil lebih percaya diri. Ada pertanyaan seputar perawatan kulit atau kecantikan hari ini?',
         time: getTime(),
         quickReplies: [
           'List harga layanan Dermalounge',
@@ -53,6 +53,7 @@
       setMessages(newMessages);
       setInput('');
 
+      setIsLoading(true);
       try {
         // Send to backend
         const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/ask', {
@@ -75,19 +76,11 @@
 
         setIsLoading(false);
       } catch (error) {
-        setMessages(prev => [
-          ...prev,
-          {
-            sender: 'bot',
-            text: 'Maaf, terjadi kesalahan pada server. Silakan coba lagi nanti.',
-            time: getTime(),
-          },
-        ]);
+        sendMessage('gimana')
         console.error('Fetch error:', error);
       } finally {
         setIsLoading(false);
       }
-        setIsLoading(false);
     };
 
     return (
@@ -158,6 +151,64 @@ return parsedObj.jawaban;
             Kirim
           </button>
         </div>
+        <div style={{width: '96.6%'}}>
+                    <div style={{
+            backgroundColor: '#f0f0f0',
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'row',
+            overflowX: 'auto',
+            padding: '8px',
+            scrollbarWidth: 'none'
+          }}>
+            <div
+              style={{
+                flexShrink: 0,
+                background: '#fff',
+                border: '1px solid #ccc',
+                padding: '8px 12px',
+                borderRadius: '20px',
+                fontSize: '13px',
+                cursor: 'pointer',
+                margin: '3px'
+              }}
+              onClick={() => sendMessage('Dapatkah bopeng dihilangkan?')}
+            >
+              Dapatkah bopeng dihilangkan?
+            </div>
+            <div
+              style={{
+                flexShrink: 0,
+                background: '#fff',
+                border: '1px solid #ccc',
+                padding: '8px 12px',
+                borderRadius: '20px',
+                fontSize: '13px',
+                cursor: 'pointer',
+                margin: '3px'
+              }}
+              onClick={() => sendMessage('Bisa booking treatment untuk besok?')}
+            >
+              Bisa booking treatment untuk besok?
+            </div>
+            <div
+              style={{
+                flexShrink: 0,
+                background: '#fff',
+                border: '1px solid #ccc',
+                padding: '8px 12px',
+                borderRadius: '20px',
+                fontSize: '13px',
+                cursor: 'pointer',
+                margin: '3px'
+              }}
+              onClick={() => sendMessage('Bisa booking treatment untuk besok?')}
+            >
+              Ada treatment untuk jerawat?
+            </div>
+          </div>
+
+            </div>
       </div>
     );
   };
