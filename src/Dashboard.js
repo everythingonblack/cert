@@ -47,7 +47,7 @@ const Dashboard = () => {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/dashboard/dev');
+        const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/dashboard');
         const data = await response.json();
         setDiscussedTopics(data[0]?.result?.topics)
 
@@ -92,7 +92,7 @@ const navigate = useNavigate();
       const token = localStorage.getItem('token');
 
       try {
-        const response = await fetch('https://bot.kediritechnopark.com/webhook/profile/dev', {
+        const response = await fetch('https://bot.kediritechnopark.com/webhook/profile', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
