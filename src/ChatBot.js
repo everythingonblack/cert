@@ -114,7 +114,6 @@ let parsedObj = JSON.parse(cleanText);
 
 return parsedObj.jawaban;
 } catch (e) {
-  console.error("JSON parsing error:", e);  // Log error parsing if it occurs
   return msg.text;  // Return an empty string if there is an error
 }
 

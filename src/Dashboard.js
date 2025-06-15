@@ -15,6 +15,7 @@ const Dashboard = () => {
   const [discussedTopics, setDiscussedTopics] = useState([]);
   const [modalContent, setModalContent] = useState(null);
   const [rawData, setRawData] = useState([]);
+  const [loading, setLoading] = useState(true); // ⬅️ Tambahkan state loading
 
   const [stats, setStats] = useState({
     totalChats: 0,
@@ -24,8 +25,9 @@ const Dashboard = () => {
 
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleFile = (file) => {
     if (file) {
@@ -41,17 +43,37 @@ const Dashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.reload(); // Bisa juga: window.location.href = '/login';
+    window.location.reload();
   };
 
   useEffect(() => {
-    async function fetchStats() {
-      try {
-        const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/dashboard');
-        const data = await response.json();
-        setDiscussedTopics(data[0]?.result?.topics)
+    const fetchData = async () => {
+      const token = localStorage.getItem('token');
 
-        const graphObj = data[0].result.graph;
+      try {
+        const response = await fetch('https://bot.kediritechnopark.com/webhook/profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem('token');
+          navigate('/login');
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error('Fetch gagal dengan status: ' + response.status);
+        }
+
+        const data = await response.json();
+        console.log(data);
+        setDiscussedTopics(data?.result?.topics)
+
+        const graphObj = data.result.graph;
         const rawDataArray = Object.entries(graphObj).map(([hour, sesi]) => ({
           hour,
           sesi,
@@ -76,47 +98,10 @@ const Dashboard = () => {
           userMessages,
           botMessages,
         });
-
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-      }
-    }
-
-    fetchStats();
-  }, []);
-
-const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const token = localStorage.getItem('token');
-
-      try {
-        const response = await fetch('https://bot.kediritechnopark.com/webhook/profile', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (response.status === 401 || response.status === 403) {
-          // Token tidak valid atau tidak punya akses, redirect ke login
-          localStorage.removeItem('token'); // Hapus token agar bersih
-          navigate('/login');
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error('Fetch gagal dengan status: ' + response.status);
-        }
-
-        const data = await response.json();
-        console.log(data);
-        // lanjutkan penggunaan data
+        
+        setLoading(false); // ⬅️ Setelah berhasil, hilangkan loading
       } catch (error) {
         console.error('Error:', error);
-        // Bisa juga redirect ke login kalau error tertentu
         navigate('/login');
       }
     };
@@ -211,6 +196,11 @@ const navigate = useNavigate();
       },
     });
   }, [rawData]);
+
+  // ⬇️ Jika masih loading, tampilkan full white screen
+  if (loading) {
+    return <div style={{ backgroundColor: 'white', width: '100vw', height: '100vh' }} />;
+  }
 
   return (
     <div className={styles.dashboardContainer}>

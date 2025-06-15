@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+
 import Dashboard from './Dashboard';
 import TenantDashboard from './TenantDashboard';
 import ChatBot from './ChatBot';
-
-import './App.css';
 import Login from './Login';
 
-function App() {
-  function ChatBotWrapper() {
+import './App.css';
+
+function ChatBotWrapper() {
   const { agentId } = useParams();
   const [agentDetails, setAgentDetails] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,20 +33,29 @@ function App() {
     fetchAgent();
   }, [agentId]);
 
-  // if (loading) return <div>Loading...</div>;
-  // if (!agentDetails) return <div>No agent found</div>;
-
   return <ChatBot agentId={agentId} />;
 }
+
+// ✅ Komponen proteksi route
+const ProtectedRoute = ({ element }) => {
+  const token = localStorage.getItem('token');
+  return token ? element : <Navigate to="/login" />;
+};
+
+function App() {
   return (
     <div className='App'>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<ChatBotWrapper />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
-    </BrowserRouter>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<ChatBotWrapper />} />
+          <Route path="/login" element={<Login />} />
+          {/* ✅ Route /dashboard diproteksi */}
+          <Route
+            path="/dashboard"
+            element={<ProtectedRoute element={<Dashboard />} />}
+          />
+        </Routes>
+      </BrowserRouter>
     </div>
   );
 }
