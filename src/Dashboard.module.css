@@ -43,8 +43,8 @@
 }
 
 .dashboardHeader img {
-  width: 50px;
-  height: 50px;
+  width: 75px;
+  height: 75px;
   border-radius: 50%;
 }
 
@@ -191,4 +191,46 @@ position: absolute;
 
 .logoutButton:hover {
   background-color: #cb0f0f;
+}
+.dropdownContainer {
+  position: relative;
+  display: inline-block;
+
+position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.dropdownToggle {
+  background-color: #007bff;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dropdownMenu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background-color: white;
+  border: 1px solid #ccc;
+  min-width: 160px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  z-index: 1;
+  border-radius: 4px;
+}
+
+.dropdownItem {
+  padding: 10px 16px;
+  text-align: left;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.dropdownItem:hover {
+  background-color: #f0f0f0;
 }

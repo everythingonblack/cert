@@ -1,14 +1,23 @@
 .chatContainer {
-  max-width: 500px;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow: auto;
+    height: 100%;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px #0003;
+    display: flex;
+    flex-direction: column;
+    max-width: 500px;
+    overflow: auto;
+    position: relative;
 }
 
+.PopUp{
+    background-color: #555454ab;
+    position: absolute;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 .chatHeader {
   background: #075e54;
   color: #fff;
@@ -116,6 +125,22 @@
   flex-wrap: wrap;
   gap: 8px;
   margin: 10px 0 0;
+}
+.inputGroup {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.prefix {
+  background-color: #f0f0f0;
+  padding: 0.5rem 0.75rem;
+  border-right: 1px solid #ccc;
+  font-size: 12px;
+  color: #555;
 }
 
 .quickReply {

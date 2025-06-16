@@ -9,6 +9,8 @@ import DiscussedTopics from './DiscussedTopics';
 import Chart from 'chart.js/auto';
 
 const Dashboard = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const chartRef = useRef(null);
   const chartInstanceRef = useRef(null);
   const [conversations, setConversations] = useState([]);
@@ -45,6 +47,22 @@ const Dashboard = () => {
     localStorage.removeItem('user');
     window.location.reload();
   };
+
+  const menuRef = useRef(null);
+
+  // Close dropdown if click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,7 +116,7 @@ const Dashboard = () => {
           userMessages,
           botMessages,
         });
-        
+
         setLoading(false); // ⬅️ Setelah berhasil, hilangkan loading
       } catch (error) {
         console.error('Error:', error);
@@ -206,14 +224,33 @@ const Dashboard = () => {
     <div className={styles.dashboardContainer}>
       <div className={styles.dashboardHeader}>
         {isLoggedIn ? (
-          <button onClick={handleLogout} className={styles.logoutButton}>Logout</button>
+
+          <div className={styles.dropdownContainer}>
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className={styles.dropdownToggle}
+               ref={menuRef}
+            >
+              ☰ Menu
+            </button>
+
+            {isMenuOpen && (
+              <div className={styles.dropdownMenu}>
+                <button onClick={handleLogout} className={styles.dropdownItem}>
+                  Ganti Password
+                </button>
+                <button onClick={handleLogout} className={styles.dropdownItem}>
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <a href="/login" className={styles.loginButton}>Login</a>
         )}
         <img src="/dermalounge.jpg" alt="Bot Avatar" />
         <div>
           <h1 className={styles.h1}>Dermalounge AI Admin Dashboard</h1>
-          <p>Statistik penggunaan chatbot secara real-time</p>
         </div>
       </div>
 
