@@ -7,6 +7,7 @@ import Conversations from './Conversations';
 import DiscussedTopics from './DiscussedTopics';
 
 import Chart from 'chart.js/auto';
+import NotificationPrompt from './NotificationPrompt';
 
 const Dashboard = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -46,6 +47,25 @@ const Dashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+
+    navigator.serviceWorker.ready.then(function (registration) {
+      registration.pushManager.getSubscription().then(function (subscription) {
+        if (subscription) {
+          subscription.unsubscribe().then(function (successful) {
+            console.log('Push subscription unsubscribed on logout:', successful);
+            // Optional: also notify backend to clear the token
+            fetch('/api/clear-subscription', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ endpoint: subscription.endpoint }),
+            });
+          });
+        }
+      });
+    });
+
     window.location.reload();
   };
 
@@ -79,8 +99,7 @@ const Dashboard = () => {
         });
 
         if (response.status === 401 || response.status === 403) {
-          localStorage.removeItem('token');
-          navigate('/login');
+          handleLogout();
           return;
         }
 
@@ -126,8 +145,19 @@ const Dashboard = () => {
     };
 
     if (!checkOnce && 'serviceWorker' in navigator) {
-      subscribeUser();
-      setCheckOnce(false);
+      navigator.serviceWorker.ready.then(function (registration) {
+        registration.pushManager.getSubscription().then(function (subscription) {
+          setCheckOnce(false);
+          if (subscription === null) {
+            // Not subscribed yet — show modal asking user to subscribe
+            setModalContent(<NotificationPrompt onAllow={subscribeUser} onDismiss={null} />);
+          } else {
+            // Already subscribed
+            setModalContent('')
+            console.log('User is already subscribed.');
+          }
+        });
+      });
     }
 
     fetchData(); // Jalankan langsung saat komponen di-mount
@@ -147,7 +177,7 @@ const Dashboard = () => {
     });
 
     const token = localStorage.getItem('token');
-    
+
     await fetch('https://bot.kediritechnopark.com/webhook/subscribe', {
       method: 'POST',
       body: JSON.stringify({
@@ -159,6 +189,7 @@ const Dashboard = () => {
       },
     });
 
+    setModalContent('')
   };
 
   function urlBase64ToUint8Array(base64String) {
@@ -189,17 +220,22 @@ const Dashboard = () => {
     const prefixLabelMap = {
       WEB: 'Web App',
       TGG: 'Telegram',
-      DME: 'Instagram',
+      WGG: 'Whatsapp',
     };
 
     const prefixColors = {
       WEB: { border: '#4285F4', background: 'rgba(66, 133, 244, 0.2)' },
       TGG: { border: '#25D366', background: 'rgba(37, 211, 102, 0.2)' },
-      DME: { border: '#AA00FF', background: 'rgba(170, 0, 255, 0.2)' },
+      WGG: { border: '#AA00FF', background: 'rgba(170, 0, 255, 0.2)' },
     };
 
     const prefixes = Object.keys(prefixLabelMap);
-    const hours = rawData.map(d => d.hour).sort((a, b) => parseFloat(a) - parseFloat(b));
+const hours = rawData.map(d => d.hour.split(' ')[1]).sort((a, b) => {
+  // Sort berdasarkan jam dan menit
+  const [h1, m1] = a.split(':').map(Number);
+  const [h2, m2] = b.split(':').map(Number);
+  return h1 !== h2 ? h1 - h2 : m1 - m2;
+});
 
     const counts = {};
     prefixes.forEach(prefix => {
@@ -298,7 +334,7 @@ const Dashboard = () => {
       <div className={styles.statsGrid}>
         <div className={styles.statCard} onClick={openConversationsModal}>
           <h2>{stats.totalChats}</h2>
-          <p>Total Percakapan Hari Ini</p>
+          <p>Total Percakapan selama 24 jam</p>
         </div>
         <div className={styles.statCard}>
           <h2>{stats.userMessages}</h2>
