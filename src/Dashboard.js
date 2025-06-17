@@ -230,12 +230,7 @@ const Dashboard = () => {
     };
 
     const prefixes = Object.keys(prefixLabelMap);
-const hours = rawData.map(d => d.hour.split(' ')[1]).sort((a, b) => {
-  // Sort berdasarkan jam dan menit
-  const [h1, m1] = a.split(':').map(Number);
-  const [h2, m2] = b.split(':').map(Number);
-  return h1 !== h2 ? h1 - h2 : m1 - m2;
-});
+    const hours = rawData.map(d => d.hour).sort((a, b) => parseFloat(a) - parseFloat(b));
 
     const counts = {};
     prefixes.forEach(prefix => {
