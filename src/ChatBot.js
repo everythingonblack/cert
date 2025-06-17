@@ -18,6 +18,11 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+
+  const [isPoppedUp, setIsPoppedUp] = useState(false);
+  const [name, setName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   useEffect(() => {
 
     if (existingConversation && existingConversation.length > 0) {
@@ -41,7 +46,7 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
     }
   }, []);
 
-  const sendMessage = async (textOverride = null, tryCount = 0) => {
+  const sendMessage = async (textOverride = null, name, phoneNumber, tryCount = 0) => {
     const message = textOverride || input.trim();
     if (message === '') return;
 
@@ -60,7 +65,7 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
       const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/ask/dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pertanyaan: message, sessionId: JSON.parse(localStorage.getItem('session')).sessionId, lastSeen: new Date().toISOString() }),
+        body: JSON.stringify({ pertanyaan: message, sessionId: JSON.parse(localStorage.getItem('session')).sessionId, lastSeen: new Date().toISOString(), name: JSON.parse(localStorage.getItem('session')).name, phoneNumber: JSON.parse(localStorage.getItem('session')).phoneNumber }),
       });
 
       const data = await response.json();
@@ -74,6 +79,12 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
         ...prev,
         { sender: 'bot', text: botAnswer, time: getTime() },
       ]);
+      
+      const session = JSON.parse(localStorage.getItem('session'));
+
+      if ((!session ||   !session.name || !session.phoneNumber) && messages.length > 2) {
+        setIsPoppedUp(true);               // munculkan form input
+      }
 
       setIsLoading(false);
     } catch (error) {
@@ -87,7 +98,7 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
         setIsLoading(false);
         return;
       }
-      setTimeout(() => sendMessage(message, tryCount + 1), 3000);
+      setTimeout(() => sendMessage(message, name, phoneNumber, tryCount + 1), 3000);
 
       console.error('Fetch error:', error);
     }
@@ -157,40 +168,68 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
           onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
           disabled={isLoading}
         />
+
         <button onClick={() => sendMessage()} disabled={isLoading}>
           Kirim
         </button>
       </div>
-      <div className={styles.PopUp}>
-
-        <div className={`${styles.message} ${styles['bot']}`}>
-          Untuk bisa membantu Anda lebih jauh, boleh saya tahu nama dan nomor telepon Anda?
-          Informasi ini juga membantu tim admin kami jika perlu melakukan follow-up nantinya 😊
-          <div className={styles.quickReplies} style={{ flexDirection: 'column' }}>
-            <input
-              className={styles.quickReply}
-              placeholder="Nama Lengkapmu"
-              onFocus={() => console.log('Nama focused')}
-            />
-            <div className={styles.inputGroup}>
-              <span className={styles.prefix}>+62</span>
+      {isPoppedUp &&
+        <div className={styles.PopUp}>
+          <div className={`${styles.message} ${styles['bot']}`}>
+            Untuk bisa membantu Anda lebih jauh, boleh saya tahu nama dan nomor telepon Anda?
+            Informasi ini juga membantu tim admin kami jika perlu melakukan follow-up nantinya 😊
+            <div className={styles.quickReplies} style={{ flexDirection: 'column' }}>
               <input
-                type="tel"
                 className={styles.quickReply}
-                placeholder="Nomor HP"
-                onFocus={() => console.log('Telepon focused')}
-                style={{border: 0, width: '100%'}}
+                placeholder="Nama Lengkapmu"
+                onFocus={() => console.log('Nama focused')}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={40}
               />
-            </div>
+              <div className={styles.inputGroup}>
+                <span className={styles.prefix}>+62</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={11}
+                  className={styles.quickReply2}
+                  placeholder="Nomor HP"
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Hanya angka, maksimal 11 karakter
+                    if (/^\d{0,11}$/.test(value)) {
+                      setPhoneNumber(value);
+                    }
+                  }}
+                  onFocus={() => console.log('Telepon focused')}
+                />
 
-            <div
-              className={styles.quickReply}
-            >
-              Lanjut
+              </div>
+
+              <div
+                className={styles.quickReply}
+                style={{ color: name.length > 2 && phoneNumber.length >= 10 ? 'black' : '#ccc' }}
+                onClick={() => {
+                  if (name.length > 2 && phoneNumber.length >= 10) {
+                    const sessionData = JSON.parse(localStorage.getItem('session')) || {};
+
+                    sessionData.name = name;
+                    sessionData.phoneNumber = phoneNumber;
+
+                    localStorage.setItem('session', JSON.stringify(sessionData));
+                    setIsPoppedUp(false)
+                  }
+                }}
+              >
+                Lanjut
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      }
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-
 import axios from 'axios';
 
 import Dashboard from './Dashboard';
+import ResetPassword from './ResetPassword'; // ⬅️ import komponen reset
 import TenantDashboard from './TenantDashboard';
 import ChatBot from './ChatBot';
 import Login from './Login';
@@ -49,6 +50,7 @@ function App() {
         <Routes>
           <Route path="/" element={<ChatBotWrapper />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           {/* ✅ Route /dashboard diproteksi */}
           <Route
             path="/dashboard"

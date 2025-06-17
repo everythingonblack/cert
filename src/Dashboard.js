@@ -18,6 +18,7 @@ const Dashboard = () => {
   const [modalContent, setModalContent] = useState(null);
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(true); // ⬅️ Tambahkan state loading
+  const [checkOnce, setCheckOnce] = useState(false); // ⬅️ Tambahkan state loading
 
   const [stats, setStats] = useState({
     totalChats: 0,
@@ -124,8 +125,48 @@ const Dashboard = () => {
       }
     };
 
-    fetchData();
+    if (!checkOnce && 'serviceWorker' in navigator) {
+      subscribeUser();
+      setCheckOnce(false);
+    }
+
+    fetchData(); // Jalankan langsung saat komponen di-mount
+    const interval = setInterval(fetchData, 30000); // Jalankan setiap 30 detik
+    return () => clearInterval(interval); // Bersihkan interval saat komponen unmount
+
   }, [navigate]);
+
+  const subscribeUser = async () => {
+    const registration = await navigator.serviceWorker.register('/sw.js', {
+      scope: '/',
+    });
+
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array('BPT-ypQB0Z7HndmeFhRR7AMjDujCLSbOQ21VoVHLQg9MOfWhEZ7SKH5cMjLqkXHl2sTuxdY2rjHDOAxhRK2G2K4'),
+    });
+
+    const token = localStorage.getItem('token');
+    
+    await fetch('https://bot.kediritechnopark.com/webhook/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({
+        subscription, // ← push subscription object
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+  };
+
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+  }
 
   const openConversationsModal = () => {
     setModalContent(<Conversations conversations={conversations} />);
@@ -147,13 +188,13 @@ const Dashboard = () => {
 
     const prefixLabelMap = {
       WEB: 'Web App',
-      WAP: 'WhatsApp',
+      TGG: 'Telegram',
       DME: 'Instagram',
     };
 
     const prefixColors = {
       WEB: { border: '#4285F4', background: 'rgba(66, 133, 244, 0.2)' },
-      WAP: { border: '#25D366', background: 'rgba(37, 211, 102, 0.2)' },
+      TGG: { border: '#25D366', background: 'rgba(37, 211, 102, 0.2)' },
       DME: { border: '#AA00FF', background: 'rgba(170, 0, 255, 0.2)' },
     };
 
@@ -225,18 +266,17 @@ const Dashboard = () => {
       <div className={styles.dashboardHeader}>
         {isLoggedIn ? (
 
-          <div className={styles.dropdownContainer}>
+          <div className={styles.dropdownContainer} ref={menuRef}> {/* ✅ Pindahkan ref ke sini */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className={styles.dropdownToggle}
-               ref={menuRef}
             >
               ☰ Menu
             </button>
 
             {isMenuOpen && (
               <div className={styles.dropdownMenu}>
-                <button onClick={handleLogout} className={styles.dropdownItem}>
+                <button onClick={() => navigate('/reset-password')} className={styles.dropdownItem}>
                   Ganti Password
                 </button>
                 <button onClick={handleLogout} className={styles.dropdownItem}>
@@ -245,6 +285,7 @@ const Dashboard = () => {
               </div>
             )}
           </div>
+
         ) : (
           <a href="/login" className={styles.loginButton}>Login</a>
         )}

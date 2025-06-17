@@ -129,18 +129,17 @@
 .inputGroup {
   display: flex;
   align-items: center;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  overflow: hidden;
   width: 100%;
 }
 
 .prefix {
   background-color: #f0f0f0;
   padding: 0.5rem 0.75rem;
-  border-right: 1px solid #ccc;
+  border-radius: 20px 0px 0px 20px;
   font-size: 12px;
   color: #555;
+  border: 1px solid #ccc;
+  border-right: 0;
 }
 
 .quickReply {
@@ -157,4 +156,31 @@
   background: #075e54;
   color: white;
   border-color: #075e54;
+}
+
+.quickReply:hover::placeholder {
+  color: white;
+}
+
+.quickReply2 {
+  width: 100%;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 8px 14px;
+  border-radius: 0 20px 20px 0;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quickReply2:hover {
+  background: #075e54;
+  color: white;
+  border-color: #075e54;
+  border: 1px solid #075e54;
+}
+
+.quickReply2:hover::placeholder {
+  color: white;
 }
