@@ -224,14 +224,25 @@ const Dashboard = () => {
     };
 
     const prefixColors = {
-      WEB: { border: '#4285F4', background: 'rgba(66, 133, 244, 0.2)' },
-      TGG: { border: '#25D366', background: 'rgba(37, 211, 102, 0.2)' },
-      WGG: { border: '#AA00FF', background: 'rgba(170, 0, 255, 0.2)' },
+      WEB: { border: '#e2b834', background: 'rgba(226,184,52,0.6)' },
+      TGG: { border: '#24A1DE', background: 'rgba(36,161,222,0.6)' },
+      WGG: { border: '#25d366', background: 'rgba(37,211,102,0.6)' },
     };
 
     const prefixes = Object.keys(prefixLabelMap);
-    const hours = rawData.map(d => d.hour).sort((a, b) => parseFloat(a) - parseFloat(b));
+const parsedHours = rawData.map(d => new Date(d.hour));
+parsedHours.sort((a, b) => a - b);
 
+// Extract only the date (no timezone shifting)
+const getDateStr = date => date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0') + '-' + date.getDate().toString().padStart(2, '0');
+
+const latestDateStr = getDateStr(parsedHours[parsedHours.length - 1]);
+
+const hours = parsedHours.map(date => {
+  const dateStr = getDateStr(date);
+  const timeStr = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+  return dateStr === latestDateStr ? timeStr : `kemarin ${timeStr}`;
+});
     const counts = {};
     prefixes.forEach(prefix => {
       counts[prefix] = hours.map(() => 0);
