@@ -72,7 +72,7 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
       console.log(data)
       // Assuming your backend sends back something like: { answer: "text" }
       // Adjust this according to your actual response shape
-      const botAnswer = data[0].output[0].text || data[0].output || 'Maaf, saya tidak mengerti.';
+      const botAnswer = data.jawaban || 'Maaf, saya tidak mengerti.';
 
       // Add bot's reply
       setMessages(prev => [

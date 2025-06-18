@@ -23,7 +23,6 @@ const Dashboard = () => {
 
   const [stats, setStats] = useState({
     totalChats: 0,
-    userMessages: 0,
     botMessages: 0,
   });
 
@@ -118,14 +117,12 @@ const Dashboard = () => {
         }));
         setRawData(rawDataArray);
         let totalSessions = new Set();
-        let userMessages = 0;
         let botMessages = 0;
 
         rawDataArray.forEach(({ sesi }) => {
           Object.values(sesi).forEach(messages => {
             messages.forEach(msg => {
               totalSessions.add(msg.session_id);
-              if (msg.message.type === 'human') userMessages++;
               if (msg.message.type === 'ai') botMessages++;
             });
           });
@@ -133,7 +130,6 @@ const Dashboard = () => {
 
         setStats({
           totalChats: totalSessions.size,
-          userMessages,
           botMessages,
         });
 
@@ -150,18 +146,19 @@ const Dashboard = () => {
           setCheckOnce(false);
           if (subscription === null) {
             // Not subscribed yet — show modal asking user to subscribe
-            setModalContent(<NotificationPrompt onAllow={subscribeUser} onDismiss={null} />);
+            setModalContent(<NotificationPrompt onAllow={subscribeUser} onDismiss={()=>setModalContent('')} />);
           } else {
             // Already subscribed
             setModalContent('')
             console.log('User is already subscribed.');
+            subscribeUser();
           }
         });
       });
     }
 
     fetchData(); // Jalankan langsung saat komponen di-mount
-    const interval = setInterval(fetchData, 30000); // Jalankan setiap 30 detik
+    const interval = setInterval(fetchData, 60000); // Jalankan setiap 30 detik
     return () => clearInterval(interval); // Bersihkan interval saat komponen unmount
 
   }, [navigate]);
@@ -236,13 +233,12 @@ parsedHours.sort((a, b) => a - b);
 // Extract only the date (no timezone shifting)
 const getDateStr = date => date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0') + '-' + date.getDate().toString().padStart(2, '0');
 
-const latestDateStr = getDateStr(parsedHours[parsedHours.length - 1]);
 
-const hours = parsedHours.map(date => {
-  const dateStr = getDateStr(date);
+const hours = parsedHours.map((date, index) => {
   const timeStr = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
-  return dateStr === latestDateStr ? timeStr : `kemarin ${timeStr}`;
+  return index === parsedHours.length - 1 ? 'Sekarang' : timeStr;
 });
+
     const counts = {};
     prefixes.forEach(prefix => {
       counts[prefix] = hours.map(() => 0);
@@ -282,15 +278,12 @@ const hours = parsedHours.map(date => {
         scales: {
           y: {
             beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Jumlah Pesan',
-            },
           },
           x: {
-            title: {
-              display: true,
-              text: 'Jam',
+            ticks: {
+              font: {
+                size: 10, // 👈 set your desired font size here
+              },
             },
           },
         },
@@ -343,12 +336,12 @@ const hours = parsedHours.map(date => {
           <p>Total Percakapan selama 24 jam</p>
         </div>
         <div className={styles.statCard}>
-          <h2>{stats.userMessages}</h2>
-          <p>Pesan dari Pengguna</p>
-        </div>
-        <div className={styles.statCard}>
           <h2>{stats.botMessages}</h2>
           <p>Respons Bot</p>
+        </div>
+        <div className={styles.statCard}>
+          <h2>{8}</h2>
+          <p>Follow up</p>
         </div>
         <div className={styles.statCard} onClick={openTopicsModal}>
           <h2 style={{ fontSize: '17px' }}>{discussedTopics[0]?.topic}</h2>
