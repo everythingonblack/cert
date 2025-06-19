@@ -9,6 +9,7 @@ import ChatBot from './ChatBot';
 import Login from './Login';
 
 import './App.css';
+import ProfileTab from './ProfileTab';
 
 function ChatBotWrapper() {
   const { agentId } = useParams();
@@ -55,6 +56,10 @@ function App() {
           <Route
             path="/dashboard"
             element={<ProtectedRoute element={<Dashboard />} />}
+          />
+          <Route
+            path="/profile"
+            element={<ProtectedRoute element={<ProfileTab />} />}
           />
         </Routes>
       </BrowserRouter>

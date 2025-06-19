@@ -6,6 +6,8 @@ import Modal from './Modal';
 import Conversations from './Conversations';
 import DiscussedTopics from './DiscussedTopics';
 
+import FollowUps from './FollowUps';
+
 import Chart from 'chart.js/auto';
 import NotificationPrompt from './NotificationPrompt';
 
@@ -15,6 +17,7 @@ const Dashboard = () => {
   const chartRef = useRef(null);
   const chartInstanceRef = useRef(null);
   const [conversations, setConversations] = useState([]);
+  const [followUps, setFollowUps] = useState([]);
   const [discussedTopics, setDiscussedTopics] = useState([]);
   const [modalContent, setModalContent] = useState(null);
   const [rawData, setRawData] = useState([]);
@@ -28,7 +31,6 @@ const Dashboard = () => {
 
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const navigate = useNavigate();
 
@@ -38,10 +40,6 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token);
-  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -89,7 +87,7 @@ const Dashboard = () => {
       const token = localStorage.getItem('token');
 
       try {
-        const response = await fetch('https://bot.kediritechnopark.com/webhook/profile', {
+        const response = await fetch('https://bot.kediritechnopark.com/webhook/dashboard', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -109,6 +107,7 @@ const Dashboard = () => {
         const data = await response.json();
         console.log(data);
         setDiscussedTopics(data?.result?.topics)
+        setFollowUps(data?.result?.interested_users)
 
         const graphObj = data.result.graph;
         const rawDataArray = Object.entries(graphObj).map(([hour, sesi]) => ({
@@ -218,12 +217,14 @@ const Dashboard = () => {
       WEB: 'Web App',
       TGG: 'Telegram',
       WGG: 'Whatsapp',
+      IGG: 'Instagram',
     };
 
     const prefixColors = {
       WEB: { border: '#e2b834', background: 'rgba(226,184,52,0.6)' },
       TGG: { border: '#24A1DE', background: 'rgba(36,161,222,0.6)' },
       WGG: { border: '#25d366', background: 'rgba(37,211,102,0.6)' },
+      IGG: { border: '#d62976', background: 'rgba(214,41,118,0.6)' },
     };
 
     const prefixes = Object.keys(prefixLabelMap);
@@ -273,6 +274,9 @@ const hours = parsedHours.map((date, index) => {
           legend: {
             display: true,
             position: 'bottom',
+            labels: {
+              boxWidth: 15
+            }
           },
         },
         scales: {
@@ -299,9 +303,7 @@ const hours = parsedHours.map((date, index) => {
   return (
     <div className={styles.dashboardContainer}>
       <div className={styles.dashboardHeader}>
-        {isLoggedIn ? (
-
-          <div className={styles.dropdownContainer} ref={menuRef}> {/* ✅ Pindahkan ref ke sini */}
+          <div className={styles.dropdownContainer} ref={menuRef}>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className={styles.dropdownToggle}
@@ -311,8 +313,8 @@ const hours = parsedHours.map((date, index) => {
 
             {isMenuOpen && (
               <div className={styles.dropdownMenu}>
-                <button onClick={() => navigate('/reset-password')} className={styles.dropdownItem}>
-                  Ganti Password
+                <button onClick={() => navigate('/profile')} className={styles.dropdownItem}>
+                  Profile
                 </button>
                 <button onClick={handleLogout} className={styles.dropdownItem}>
                   Logout
@@ -320,10 +322,6 @@ const hours = parsedHours.map((date, index) => {
               </div>
             )}
           </div>
-
-        ) : (
-          <a href="/login" className={styles.loginButton}>Login</a>
-        )}
         <img src="/dermalounge.jpg" alt="Bot Avatar" />
         <div>
           <h1 className={styles.h1}>Dermalounge AI Admin Dashboard</h1>
@@ -339,8 +337,8 @@ const hours = parsedHours.map((date, index) => {
           <h2>{stats.botMessages}</h2>
           <p>Respons Bot</p>
         </div>
-        <div className={styles.statCard}>
-          <h2>{8}</h2>
+        <div className={styles.statCard} onClick={()=>setModalContent(<FollowUps data={followUps} />)}>
+          <h2>{followUps.length}</h2>
           <p>Follow up</p>
         </div>
         <div className={styles.statCard} onClick={openTopicsModal}>

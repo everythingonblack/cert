@@ -30,24 +30,7 @@ const Login = () => {
 
       if (loginData?.success && loginData?.token) {
         localStorage.setItem('token', loginData.token);
-
-        const profileResponse = await fetch('https://bot.kediritechnopark.com/webhook/profile', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${loginData.token}`
-          }
-        });
-
-        const profileDataRaw = await profileResponse.json();
-        const profileData = Array.isArray(profileDataRaw) ? profileDataRaw[0] : profileDataRaw;
-
-        if (profileData?.success) {
-          localStorage.setItem('user', JSON.stringify(profileData.user));
-          window.location.href = '/dashboard';
-        } else {
-          setError('Token tidak valid');
-        }
+        window.location.href = '/dashboard';
       } else {
         setError(loginData?.message || 'Username atau password salah');
       }

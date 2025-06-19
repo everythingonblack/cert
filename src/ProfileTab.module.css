@@ -1,0 +1,218 @@
+/* Container */
+.dashboardContainer {
+    width: 100%;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Header */
+.profileHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+
+.editButton {
+  background-color: #075e54;
+  color: white;
+  padding: 6px 12px;
+  font-size: 12px;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.editButton:hover {
+  background-color: #0f9b8a;
+}
+
+/* Profile Section */
+.profileSection {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.companyImage {
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profileDetails {
+  flex: 1;
+  min-width: 260px;
+}
+
+.profileDetails p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+
+/* License Section */
+.licenseSection {
+  margin-top: 20px;
+}
+
+.licenseCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.licenseCard {
+  background: linear-gradient(135deg, #075e54, #128c7e);
+  color: white;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  font-size: 14px;
+}
+
+/* ====================
+   Responsive Breakpoints
+==================== */
+
+/* Tablet (768px – 1023px) */
+@media screen and (max-width: 1023px) {
+  .profileSection {
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+
+  .profileDetails {
+    min-width: 100%;
+  }
+
+  .licenseCards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile (≤ 767px) */
+@media screen and (max-width: 767px) {
+  .profileHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .editButton {
+    align-self: flex-end;
+  }
+
+  .profileSection {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .companyImage {
+    margin-bottom: 12px;
+  }
+
+  .profileDetails {
+    text-align: left;
+    width: 100%;
+  }
+
+  .licenseCards {
+    grid-template-columns: 1fr;
+  }
+
+  .licenseCard {
+    font-size: 13px;
+  }
+}
+.profileInputGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.profileInputGroup label {
+  min-width: 100px; /* atau sesuai label terpanjang */
+  font-size: 14px;
+}
+
+.editableInput {
+  font-size: 14px;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #f0f8ff;
+  transition: all 0.3s ease;
+  color: #333;
+
+  width: auto;
+  max-width: 100%;
+  flex: 1; /* biar input bisa melar jika ruang tersedia */
+}
+
+/* Saat tidak dalam mode editing */
+.readOnly {
+  border-color: transparent;
+  background-color: transparent;
+  pointer-events: none;
+  color: #000;
+}
+
+
+.dropdownContainer {
+  position: relative;
+  display: inline-block;
+  position: absolute;
+  top: 37px;
+  right: 10px;
+}
+
+.dropdownToggle {
+  color: #ffff;
+  background-color: #255e54;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dropdownMenu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background-color: white;
+  border: 1px solid #ccc;
+  min-width: 160px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  z-index: 1;
+  border-radius: 4px;
+}
+
+.dropdownItem {
+  padding: 10px 16px;
+  text-align: left;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.dropdownItem:hover {
+  background-color: #f0f0f0;
+}
+
