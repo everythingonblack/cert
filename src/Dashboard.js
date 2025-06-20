@@ -142,7 +142,7 @@ const Dashboard = () => {
     if (!checkOnce && 'serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(function (registration) {
         registration.pushManager.getSubscription().then(function (subscription) {
-          setCheckOnce(false);
+          setCheckOnce(true);
           if (subscription === null) {
             // Not subscribed yet — show modal asking user to subscribe
             setModalContent(<NotificationPrompt onAllow={subscribeUser} onDismiss={()=>setModalContent('')} />);

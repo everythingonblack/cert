@@ -84,14 +84,7 @@ const ProfileTab = () => {
 
   }, [navigate]);
 
-    const [profile, setProfile] = useState({
-        name: "Rikolo",
-        company: "Dermalounge",
-        address: "Jl. Pahlawan No.123, Kediri",
-        email: "admin@dermalounge.com",
-        phone: "08123456789",
-        image: "/dermalounge.jpg"
-    });
+    const [profile, setProfile] = useState({});
 
     const licenses = [
         { id: 1, type: "AI Bot License", number: "DL-2025-AI001", validUntil: "2026-12-31" },
