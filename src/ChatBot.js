@@ -103,6 +103,17 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
       console.error('Fetch error:', error);
     }
   };
+function formatBoldText(text) {
+  const parts = text.split(/(\*\*[^\*]+\*\*)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    } else {
+      return <span key={index}>{part}</span>;
+    }
+  });
+}
 
   return (
     <div className={styles.chatContainer} >
@@ -127,19 +138,15 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
           >
             <div className={`${styles.message} ${styles[msg.sender]}`}>
               {msg.sender !== 'bot'
-                ? msg.text
-                : (() => {
-                  try {
-                    let cleanText = msg.text.replace(/`/g, '');  // Remove backticks
-                    cleanText = cleanText.substring(4);  // Remove first 4 characters
-                    let parsedObj = JSON.parse(cleanText);
+  ? msg.text
+  : (() => {
+      try {
+        return formatBoldText(msg.text);    // Apply formatting here
+      } catch (e) {
+        return msg.text;
+      }
+    })()}
 
-                    return parsedObj.jawaban;
-                  } catch (e) {
-                    return msg.text;  // Return an empty string if there is an error
-                  }
-
-                })()}
               {msg.quickReplies && (
                 <div className={styles.quickReplies}>
                   {msg.quickReplies.map((reply, i) => (

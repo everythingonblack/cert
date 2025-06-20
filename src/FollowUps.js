@@ -4,7 +4,6 @@ import styles from './FollowUps.module.css';
 const FollowUps = ({ data }) => {
   return (
     <div className={styles.container}>
-      <h2 className={styles.title}>User yang tertarik</h2>
       <div className={styles.grid}>
         {data.map(user => (
           <div key={user.id} className={styles.card}>

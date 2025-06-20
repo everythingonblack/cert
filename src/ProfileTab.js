@@ -1,43 +1,41 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaPen } from 'react-icons/fa';
-import styles from './ProfileTab.module.css';
 import { useNavigate } from 'react-router-dom';
+import styles from './ProfileTab.module.css';
 
 const ProfileTab = () => {
     const menuRef = useRef(null);
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [profile, setProfile] = useState({});
+    const [profileTemp, setProfileTemp] = useState({});
 
-    // Close dropdown if click outside
+    const licenses = [
+        { id: 1, type: "Current Subscription", number: "DRML-2025-AI001", validUntil: "June 30 2025" },
+    ];
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {
                 setIsMenuOpen(false);
             }
         };
-
         document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
 
-        navigator.serviceWorker.ready.then(function (registration) {
-            registration.pushManager.getSubscription().then(function (subscription) {
+        navigator.serviceWorker.ready.then((registration) => {
+            registration.pushManager.getSubscription().then((subscription) => {
                 if (subscription) {
-                    subscription.unsubscribe().then(function (successful) {
-                        console.log('Push subscription unsubscribed on logout:', successful);
-                        // Optional: also notify backend to clear the token
+                    subscription.unsubscribe().then((successful) => {
+                        console.log('Unsubscribed from push notifications:', successful);
                         fetch('/api/clear-subscription', {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ endpoint: subscription.endpoint }),
                         });
                     });
@@ -48,56 +46,63 @@ const ProfileTab = () => {
         window.location.reload();
     };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const token = localStorage.getItem('token');
+    useEffect(() => {
+        const fetchData = async () => {
+            const token = localStorage.getItem('token');
 
-      try {
-        const response = await fetch('https://bot.kediritechnopark.com/webhook/dashboard?profileOnly=true', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+            try {
+                const response = await fetch('https://bot.kediritechnopark.com/webhook/dashboard?profileOnly=true', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
 
-        if (response.status === 401 || response.status === 403) {
-          handleLogout();
-          return;
-        }
+                if (response.status === 401 || response.status === 403) {
+                    handleLogout();
+                    return;
+                }
 
-        if (!response.ok) {
-          throw new Error('Fetch gagal dengan status: ' + response.status);
-        }
+                if (!response.ok) {
+                    throw new Error('Fetch gagal dengan status: ' + response.status);
+                }
 
-        const data = await response.json();
-        console.log(data);
+                const data = await response.json();
+                setProfile(data.profile_data);
+                setProfileTemp(data.profile_data);
+            } catch (error) {
+                console.error('Fetch error:', error);
+                navigate('/login');
+            }
+        };
 
-        setProfile(data.profile_data);
-      } catch (error) {
-        console.error('Error:', error);
-        navigate('/login');
-      }
-    };
-
-    fetchData(); // Jalankan langsung saat komponen di-mount
-
-  }, [navigate]);
-
-    const [profile, setProfile] = useState({});
-
-    const licenses = [
-        { id: 1, type: "AI Bot License", number: "DL-2025-AI001", validUntil: "2026-12-31" },
-        { id: 2, type: "Clinic Data Access", number: "DL-2025-CL002", validUntil: "2026-06-30" }
-    ];
+        fetchData();
+    }, [navigate]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setProfile((prev) => ({ ...prev, [name]: value }));
+        setProfile(prev => ({ ...prev, [name]: value }));
     };
+
     const handleSave = async () => {
         try {
             const token = localStorage.getItem('token');
+
+            if (profile.newPassword && profile.newPassword !== profile.confirmPassword) {
+                alert('Password dan konfirmasi tidak sama.');
+                return;
+            }
+
+            const payload = { ...profile };
+            if (!payload.newPassword) {
+                delete payload.newPassword;
+                delete payload.confirmPassword;
+            } else {
+                payload.password = payload.newPassword;
+                delete payload.newPassword;
+                delete payload.confirmPassword;
+            }
 
             const response = await fetch('https://bot.kediritechnopark.com/webhook/profile', {
                 method: 'PUT',
@@ -105,16 +110,15 @@ const ProfileTab = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify(profile),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) throw new Error('Gagal menyimpan profil');
 
             const result = await response.json();
-            console.log('Profil berhasil diperbarui:', result);
 
             setIsEditing(false);
-            alert('Profil berhasil disimpan!');
+            alert('Profile saved!');
         } catch (error) {
             console.error('Error saat menyimpan profil:', error);
             alert('Terjadi kesalahan saat menyimpan profil.');
@@ -123,8 +127,7 @@ const ProfileTab = () => {
 
     return (
         <div className={styles.dashboardContainer}>
-            <div className={styles.profileHeader}>
-                <h2>Profil Perusahaan</h2>
+            <div className={styles.dashboardHeader}>
                 <div className={styles.dropdownContainer} ref={menuRef}>
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -138,25 +141,19 @@ const ProfileTab = () => {
                             <button onClick={() => navigate('/dashboard')} className={styles.dropdownItem}>
                                 Dashboard
                             </button>
-
-                            <button onClick={() => navigate('/reset-password')} className={styles.dropdownItem}>
-                                Reset Password
-                            </button>
-
-                            <button onClick={() => { setIsEditing(!isEditing); setIsMenuOpen(false) }} className={styles.dropdownItem}>
-                                {isEditing ? 'Batal Edit' : 'Edit'}
-                            </button>
-
                             <button onClick={handleLogout} className={styles.dropdownItem}>
                                 Logout
                             </button>
                         </div>
                     )}
                 </div>
+                <img src={profile?.image || '/no-brand.jpg'} alt="Bot Avatar" />
+                <div>
+                    <h1 className={styles.h1}>Dermalounge AI Admin Profile</h1>
+                </div>
             </div>
 
             <div className={styles.profileSection}>
-                <img src={profile.image} alt="Company Logo" className={styles.companyImage} />
                 <div className={styles.profileDetails}>
                     {["name", "company", "address", "email", "phone"].map((field) => (
                         <div key={field} className={styles.profileInputGroup}>
@@ -164,34 +161,74 @@ const ProfileTab = () => {
                             <input
                                 type="text"
                                 name={field}
-                                value={profile[field]}
+                                value={profile && profile[field] != null ? profile[field] : ''}
                                 onChange={handleChange}
                                 className={`${styles.editableInput} ${!isEditing ? styles.readOnly : ''}`}
                                 readOnly={!isEditing}
                             />
-
                         </div>
                     ))}
-                    {isEditing &&
-                        <div className={styles.licenseCard} style={{ marginTop: '20px', padding: '10px 16px' }} onClick={handleSave}
+
+                    {isEditing && (
+                        <>
+                            <div className={styles.profileInputGroup}>
+                                <label><strong>Old Password:</strong></label>
+                                <input
+                                    type="password"
+                                    name="newPassword"
+                                    onChange={handleChange}
+                                    className={styles.editableInput}
+                                />
+                            </div>
+                            <div className={styles.profileInputGroup}>
+                                <label><strong>New Password:</strong></label>
+                                <input
+                                    type="password"
+                                    name="confirmPassword"
+                                    onChange={handleChange}
+                                    className={styles.editableInput}
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    {!isEditing &&
+                        <div className={styles.licenseCard} style={{ marginTop: '20px', padding: '10px 16px' }} onClick={() => setIsEditing(true)}
                         >
-                            Simpan
+                            Edit
+                        </div>
+                    }
+                    {isEditing &&
+
+                        <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+                            {/* <div className={styles.licenseCard} style={{ flex: 1, padding: '10px 16px' }} onClick={() => {
+                                        setIsEditing(false);
+                                        setProfile(profileTemp);
+                                    }}>
+                                Batal
+                            </div> */}
+                            <div className={styles.licenseCard} style={{ flex: 1, padding: '10px 16px' }} onClick={handleSave}>
+                                Save
+                            </div>
                         </div>
                     }
                 </div>
             </div>
 
             <div className={styles.licenseSection}>
-                <h2>License</h2>
                 <div className={styles.licenseCards}>
                     {licenses.map((item) => (
                         <div className={styles.licenseCard} key={item.id}>
                             <p><strong>{item.type}</strong></p>
-                            <p>No: {item.number}</p>
-                            <p>Berlaku sampai: {item.validUntil}</p>
+                            <p>{item.number}</p>
+                            <p><strong>Free License </strong>Valid until: {item.validUntil}</p>
                         </div>
                     ))}
                 </div>
+            </div>
+
+            <div className={styles.footer}>
+                &copy; 2025 Kediri Technopark
             </div>
         </div>
     );

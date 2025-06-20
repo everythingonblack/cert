@@ -55,11 +55,17 @@
   margin-top: 20px;
 }
 
+.statsGrid p {
+  text-transform: uppercase;
+}
 .statCard {
   background: #ece5dd;
   border-radius: 10px;
   padding: 20px;
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
 }
 
 .statCard h2 {
@@ -200,8 +206,8 @@ position: absolute;
   position: relative;
   display: inline-block;
   position: absolute;
-  top: 10px;
-  right: 10px;
+    bottom: 5px;
+    right: 5px;
 }
 
 .dropdownToggle {

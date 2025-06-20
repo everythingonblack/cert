@@ -145,7 +145,7 @@ const Dashboard = () => {
           setCheckOnce(true);
           if (subscription === null) {
             // Not subscribed yet — show modal asking user to subscribe
-            setModalContent(<NotificationPrompt onAllow={subscribeUser} onDismiss={()=>setModalContent('')} />);
+            setModalContent(<NotificationPrompt onAllow={subscribeUser} onDismiss={() => setModalContent('')} />);
           } else {
             // Already subscribed
             setModalContent('')
@@ -228,17 +228,17 @@ const Dashboard = () => {
     };
 
     const prefixes = Object.keys(prefixLabelMap);
-const parsedHours = rawData.map(d => new Date(d.hour));
-parsedHours.sort((a, b) => a - b);
+    const parsedHours = rawData.map(d => new Date(d.hour));
+    parsedHours.sort((a, b) => a - b);
 
-// Extract only the date (no timezone shifting)
-const getDateStr = date => date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0') + '-' + date.getDate().toString().padStart(2, '0');
+    // Extract only the date (no timezone shifting)
+    const getDateStr = date => date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0') + '-' + date.getDate().toString().padStart(2, '0');
 
 
-const hours = parsedHours.map((date, index) => {
-  const timeStr = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
-  return index === parsedHours.length - 1 ? 'Sekarang' : timeStr;
-});
+    const hours = parsedHours.map((date, index) => {
+      const timeStr = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+      return index === parsedHours.length - 1 ? 'Now' : timeStr;
+    });
 
     const counts = {};
     prefixes.forEach(prefix => {
@@ -303,25 +303,25 @@ const hours = parsedHours.map((date, index) => {
   return (
     <div className={styles.dashboardContainer}>
       <div className={styles.dashboardHeader}>
-          <div className={styles.dropdownContainer} ref={menuRef}>
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={styles.dropdownToggle}
-            >
-              ☰ Menu
-            </button>
+        <div className={styles.dropdownContainer} ref={menuRef}>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className={styles.dropdownToggle}
+          >
+            ☰ Menu
+          </button>
 
-            {isMenuOpen && (
-              <div className={styles.dropdownMenu}>
-                <button onClick={() => navigate('/profile')} className={styles.dropdownItem}>
-                  Profile
-                </button>
-                <button onClick={handleLogout} className={styles.dropdownItem}>
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
+          {isMenuOpen && (
+            <div className={styles.dropdownMenu}>
+              <button onClick={() => navigate('/profile')} className={styles.dropdownItem}>
+                Profile
+              </button>
+              <button onClick={handleLogout} className={styles.dropdownItem}>
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
         <img src="/dermalounge.jpg" alt="Bot Avatar" />
         <div>
           <h1 className={styles.h1}>Dermalounge AI Admin Dashboard</h1>
@@ -329,26 +329,26 @@ const hours = parsedHours.map((date, index) => {
       </div>
 
       <div className={styles.statsGrid}>
-        <div className={styles.statCard} onClick={openConversationsModal}>
+        <div className={styles.statCard}>
           <h2>{stats.totalChats}</h2>
-          <p>Total Percakapan selama 24 jam</p>
+          <p>TOTAL USER PER DAY</p>
         </div>
         <div className={styles.statCard}>
           <h2>{stats.botMessages}</h2>
-          <p>Respons Bot</p>
+          <p>AI RESPONSE</p>
         </div>
-        <div className={styles.statCard} onClick={()=>setModalContent(<FollowUps data={followUps} />)}>
+        <div className={styles.statCard} onClick={() => setModalContent(<FollowUps data={followUps} />)}>
           <h2>{followUps.length}</h2>
-          <p>Follow up</p>
+          <p>BOOKING REQUEST</p>
         </div>
         <div className={styles.statCard} onClick={openTopicsModal}>
           <h2 style={{ fontSize: '17px' }}>{discussedTopics[0]?.topic}</h2>
-          <p>Paling sering ditanyakan</p>
+          <p>Top topic</p>
         </div>
       </div>
 
       <div className={styles.chartSection}>
-        <h2 className={styles.chartTitle}>Grafik Interaksi</h2>
+        <h2 className={styles.chartTitle}>Interactions</h2>
         <canvas ref={chartRef}></canvas>
       </div>
 
@@ -371,9 +371,9 @@ const hours = parsedHours.map((date, index) => {
           }}
         >
           <p className={styles.desktopText}>
-            Seret file ke sini, atau <span className={styles.uploadLink}>Klik untuk unggah</span>
+            Drop file here, or <span className={styles.uploadLink}>Click to upload</span>
           </p>
-          <p className={styles.mobileText}>Klik untuk unggah</p>
+          <p className={styles.mobileText}>Click to upload</p>
 
           {selectedFile && (
             <>

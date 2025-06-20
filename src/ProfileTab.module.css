@@ -1,39 +1,30 @@
-/* Container */
+/* Container Utama */
 .dashboardContainer {
-    width: 100%;
+  max-width: 900px;
+  margin: 30px auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  box-sizing: border-box;
 }
 
-/* Header */
-.profileHeader {
+.dashboardHeader {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-  gap: 12px;
-}
-
-.editButton {
-  background-color: #075e54;
+  gap: 15px;
+  background: #075e54;
   color: white;
-  padding: 6px 12px;
-  font-size: 12px;
-  border: none;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+  padding: 20px;
+  border-radius: 10px 10px 0 0;
+  position: relative;
 }
 
-.editButton:hover {
-  background-color: #0f9b8a;
+.dashboardHeader img {
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
 }
+
 
 /* Profile Section */
 .profileSection {
@@ -43,6 +34,7 @@
   gap: 20px;
   flex-wrap: wrap;
   margin-bottom: 30px;
+  margin-top: 20px;
 }
 
 .companyImage {
@@ -80,64 +72,42 @@
   color: white;
   padding: 16px;
   border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   font-size: 14px;
 }
 
-/* ====================
-   Responsive Breakpoints
-==================== */
-
-/* Tablet (768px – 1023px) */
-@media screen and (max-width: 1023px) {
-  .profileSection {
-    flex-direction: row;
-    justify-content: flex-start;
-  }
-
-  .profileDetails {
-    min-width: 100%;
-  }
-
-  .licenseCards {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.profileHeader {
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-/* Mobile (≤ 767px) */
-@media screen and (max-width: 767px) {
-  .profileHeader {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .editButton {
-    align-self: flex-end;
-  }
-
-  .profileSection {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .companyImage {
-    margin-bottom: 12px;
-  }
-
-  .profileDetails {
-    text-align: left;
-    width: 100%;
-  }
-
-  .licenseCards {
-    grid-template-columns: 1fr;
-  }
-
-  .licenseCard {
-    font-size: 13px;
-  }
+.editButton {
+  align-self: flex-end;
 }
+
+.profileSection {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.companyImage {
+  margin-bottom: 12px;
+}
+
+.profileDetails {
+  text-align: left;
+  width: 100%;
+}
+
+.licenseCards {
+  grid-template-columns: 1fr;
+}
+
+.licenseCard {
+  font-size: 13px;
+}
+
 .profileInputGroup {
   display: flex;
   align-items: center;
@@ -147,7 +117,8 @@
 }
 
 .profileInputGroup label {
-  min-width: 100px; /* atau sesuai label terpanjang */
+  min-width: 110px;
+  /* atau sesuai label terpanjang */
   font-size: 14px;
 }
 
@@ -162,7 +133,8 @@
 
   width: auto;
   max-width: 100%;
-  flex: 1; /* biar input bisa melar jika ruang tersedia */
+  flex: 1;
+  /* biar input bisa melar jika ruang tersedia */
 }
 
 /* Saat tidak dalam mode editing */
@@ -173,18 +145,17 @@
   color: #000;
 }
 
-
 .dropdownContainer {
   position: relative;
   display: inline-block;
   position: absolute;
-  top: 37px;
-  right: 10px;
+    bottom: 5px;
+    right: 5px;
 }
 
 .dropdownToggle {
-  color: #ffff;
-  background-color: #255e54;
+  background-color: #ffff;
+  color: #255e54;
   padding: 8px 12px;
   border: none;
   border-radius: 4px;
@@ -216,3 +187,62 @@
   background-color: #f0f0f0;
 }
 
+
+/* Input Profil */
+.profileForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 0;
+}
+
+.editableInput {
+  font-size: 14px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  color: #333;
+  transition: border-color 0.3s;
+  flex: 1;
+}
+
+.readOnly {
+  border-color: transparent;
+  background-color: transparent;
+  pointer-events: none;
+  color: #000;
+}
+
+/* Footer (optional) */
+.footer {
+  text-align: center;
+  margin-top: 30px;
+  font-size: 13px;
+  color: #777;
+}
+
+
+/* Mobile styles */
+@media (max-width: 768px) {
+.h1 {
+  color: white;
+  font-size: 23px;
+}
+.dashboardContainer {
+  max-width: 900px;
+  margin: 30px auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: none;
+  padding: 20px;
+}
+
+  .desktopText {
+    display: none;
+  }
+
+  .mobileText {
+    display: block;
+  }
+}
