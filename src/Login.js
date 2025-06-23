@@ -69,7 +69,7 @@ const Login = () => {
           </button>
         </form>
         <div className={styles.footer}>
-          &copy; 2025 Kloowear AI - Admin Panel
+          &copy; 2025 Kediri Technopark
         </div>
       </div>
     </div>

@@ -46,18 +46,9 @@ const Dashboard = () => {
 
     navigator.serviceWorker.ready.then(function (registration) {
       registration.pushManager.getSubscription().then(function (subscription) {
+        console.log(subscription)
         if (subscription) {
-          subscription.unsubscribe().then(function (successful) {
-            console.log('Push subscription unsubscribed on logout:', successful);
-            // Optional: also notify backend to clear the token
-            fetch('/api/clear-subscription', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ endpoint: subscription.endpoint }),
-            });
-          });
+          subscription.unsubscribe();
         }
       });
     });
@@ -134,6 +125,15 @@ const Dashboard = () => {
         setLoading(false); // ⬅️ Setelah berhasil, hilangkan loading
       } catch (error) {
         console.error('Error:', error);
+
+        navigator.serviceWorker.ready.then(function (registration) {
+          registration.pushManager.getSubscription().then(function (subscription) {
+            console.log(subscription)
+            if (subscription) {
+              subscription.unsubscribe();
+            }
+          });
+        });
         navigate('/login');
       }
     };

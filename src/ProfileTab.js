@@ -28,20 +28,14 @@ const ProfileTab = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
 
-        navigator.serviceWorker.ready.then((registration) => {
-            registration.pushManager.getSubscription().then((subscription) => {
-                if (subscription) {
-                    subscription.unsubscribe().then((successful) => {
-                        console.log('Unsubscribed from push notifications:', successful);
-                        fetch('/api/clear-subscription', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ endpoint: subscription.endpoint }),
-                        });
-                    });
-                }
-            });
-        });
+    navigator.serviceWorker.ready.then(function (registration) {
+      registration.pushManager.getSubscription().then(function (subscription) {
+        console.log(subscription)
+        if (subscription) {
+          subscription.unsubscribe();
+        }
+      });
+    });
 
         window.location.reload();
     };
@@ -73,6 +67,15 @@ const ProfileTab = () => {
                 setProfileTemp(data.profile_data);
             } catch (error) {
                 console.error('Fetch error:', error);
+
+                navigator.serviceWorker.ready.then(function (registration) {
+                registration.pushManager.getSubscription().then(function (subscription) {
+                    console.log(subscription)
+                    if (subscription) {
+                    subscription.unsubscribe();
+                    }
+                });
+                });
                 navigate('/login');
             }
         };

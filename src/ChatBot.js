@@ -8,10 +8,8 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
       text: 'Hai Dermalovers! 👋 Saya siap membantu anda tampil lebih percaya diri. Ada pertanyaan seputar perawatan kulit atau kecantikan hari ini?',
       time: getTime(),
       quickReplies: [
-        'Info layanan Dermalounge',
-        'Apa perawatan wajah recommended',
-        'Saya ingin konsultasi masalah kulit',
-        'Info lokasi & cara booking',
+        'Konsultasi estetik',
+        'Konsultasi kulit dan kelamin'
       ],
     },
   ]);
@@ -20,7 +18,7 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
   const [isLoading, setIsLoading] = useState(false);
 
 
-  const [isPoppedUp, setIsPoppedUp] = useState(false);
+  const [isPoppedUp, setIsPoppedUp] = useState('');
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   useEffect(() => {
@@ -50,6 +48,14 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
     const message = textOverride || input.trim();
     if (message === '') return;
 
+    const session = JSON.parse(localStorage.getItem('session'));
+
+    if ((!session ||   !session.name || !session.phoneNumber) && messages.length > 2) {
+      setIsPoppedUp(message); // munculkan form input
+      setInput('');
+      return;
+    }
+
     // Show user's message immediately
     const newMessages = [
       ...messages,
@@ -58,7 +64,7 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
 
     setMessages(newMessages);
     setInput('');
-
+    
     setIsLoading(true);
     try {
       // Send to backend
@@ -79,12 +85,6 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
         ...prev,
         { sender: 'bot', text: botAnswer, time: getTime() },
       ]);
-      
-      const session = JSON.parse(localStorage.getItem('session'));
-
-      if ((!session ||   !session.name || !session.phoneNumber) && messages.length > 2) {
-        setIsPoppedUp(true);               // munculkan form input
-      }
 
       setIsLoading(false);
     } catch (error) {
@@ -194,7 +194,7 @@ function formatBoldText(text) {
           Kirim
         </button>
       </div>
-      {isPoppedUp &&
+      {isPoppedUp != '' &&
         <div className={styles.PopUp}>
           <div className={`${styles.message} ${styles['bot']}`}>
             Untuk bisa membantu Anda lebih jauh, boleh saya tahu nama dan nomor telepon Anda?
@@ -241,7 +241,8 @@ function formatBoldText(text) {
                     sessionData.phoneNumber = phoneNumber;
 
                     localStorage.setItem('session', JSON.stringify(sessionData));
-                    setIsPoppedUp(false)
+                    setIsPoppedUp('')
+                    sendMessage(isPoppedUp)
                   }
                 }}
               >
