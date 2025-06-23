@@ -62,7 +62,7 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
     setIsLoading(true);
     try {
       // Send to backend
-      const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/ask/dev', {
+      const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pertanyaan: message, sessionId: JSON.parse(localStorage.getItem('session')).sessionId, lastSeen: new Date().toISOString(), name: JSON.parse(localStorage.getItem('session')).name, phoneNumber: JSON.parse(localStorage.getItem('session')).phoneNumber }),
@@ -72,7 +72,7 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
       console.log(data)
       // Assuming your backend sends back something like: { answer: "text" }
       // Adjust this according to your actual response shape
-      const botAnswer = data.jawaban || 'Maaf, saya tidak mengerti.';
+      const botAnswer = data.jawaban || 'Maaf saya sedang tidak tersedia sekarang, coba lagi nanti';
 
       // Add bot's reply
       setMessages(prev => [
@@ -106,14 +106,28 @@ const ChatBot = ({ existingConversation, readOnly, hh }) => {
 function formatBoldText(text) {
   const parts = text.split(/(\*\*[^\*]+\*\*)/g);
 
-  return parts.map((part, index) => {
+  return parts.flatMap((part, index) => {
+    const elements = [];
+
     if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={index}>{part.slice(2, -2)}</strong>;
+      // Bold text
+      part = part.slice(2, -2);
+      part.split('\n').forEach((line, i) => {
+        if (i > 0) elements.push(<br key={`br-bold-${index}-${i}`} />);
+        elements.push(<strong key={`bold-${index}-${i}`}>{line}</strong>);
+      });
     } else {
-      return <span key={index}>{part}</span>;
+      // Normal text
+      part.split('\n').forEach((line, i) => {
+        if (i > 0) elements.push(<br key={`br-${index}-${i}`} />);
+        elements.push(<span key={`text-${index}-${i}`}>{line}</span>);
+      });
     }
+
+    return elements;
   });
 }
+
 
   return (
     <div className={styles.chatContainer} >

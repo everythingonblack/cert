@@ -22,7 +22,6 @@ const Dashboard = () => {
   const [modalContent, setModalContent] = useState(null);
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(true); // ⬅️ Tambahkan state loading
-  const [checkOnce, setCheckOnce] = useState(false); // ⬅️ Tambahkan state loading
 
   const [stats, setStats] = useState({
     totalChats: 0,
@@ -139,54 +138,58 @@ const Dashboard = () => {
       }
     };
 
-    if (!checkOnce && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(function (registration) {
-        registration.pushManager.getSubscription().then(function (subscription) {
-          setCheckOnce(true);
-          if (subscription === null) {
-            // Not subscribed yet — show modal asking user to subscribe
-            setModalContent(<NotificationPrompt onAllow={subscribeUser} onDismiss={() => setModalContent('')} />);
-          } else {
-            // Already subscribed
-            setModalContent('')
-            console.log('User is already subscribed.');
-            subscribeUser();
-          }
-        });
-      });
-    }
-
     fetchData(); // Jalankan langsung saat komponen di-mount
     const interval = setInterval(fetchData, 60000); // Jalankan setiap 30 detik
     return () => clearInterval(interval); // Bersihkan interval saat komponen unmount
 
   }, [navigate]);
 
-  const subscribeUser = async () => {
-    const registration = await navigator.serviceWorker.register('/sw.js', {
-      scope: '/',
+useEffect(() => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(async (registration) => {
+      const subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        // Belum subscribe → tampilkan prompt
+        setModalContent(
+          <NotificationPrompt
+            onAllow={subscribeUser}
+            onDismiss={() => setModalContent('')}
+          />
+        );
+      } else {
+        // Sudah subscribe → tidak perlu panggil subscribeUser lagi
+        console.log('User is already subscribed.');
+        setModalContent('');
+        subscribeUser();
+      }
     });
+  }
+}, []);
 
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array('BPT-ypQB0Z7HndmeFhRR7AMjDujCLSbOQ21VoVHLQg9MOfWhEZ7SKH5cMjLqkXHl2sTuxdY2rjHDOAxhRK2G2K4'),
-    });
 
-    const token = localStorage.getItem('token');
+const subscribeUser = async () => {
+  setModalContent('');
+  const registration = await navigator.serviceWorker.ready;
 
-    await fetch('https://bot.kediritechnopark.com/webhook/subscribe', {
-      method: 'POST',
-      body: JSON.stringify({
-        subscription, // ← push subscription object
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array('BPT-ypQB0Z7HndmeFhRR7AMjDujCLSbOQ21VoVHLQg9MOfWhEZ7SKH5cMjLqkXHl2sTuxdY2rjHDOAxhRK2G2K4'),
+  });
 
-    setModalContent('')
-  };
+  const token = localStorage.getItem('token');
+
+  await fetch('https://bot.kediritechnopark.com/webhook/subscribe', {
+    method: 'POST',
+    body: JSON.stringify({ subscription }),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  setModalContent('');
+};
+
 
   function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);

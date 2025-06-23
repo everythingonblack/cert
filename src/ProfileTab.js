@@ -89,19 +89,15 @@ const ProfileTab = () => {
         try {
             const token = localStorage.getItem('token');
 
-            if (profile.newPassword && profile.newPassword !== profile.confirmPassword) {
-                alert('Password dan konfirmasi tidak sama.');
+            if (profile.newPassword == '' || profile.oldPassword == '') {
+                alert('Password dan konfirmasi tidak boleh kosong.');
                 return;
             }
 
             const payload = { ...profile };
             if (!payload.newPassword) {
                 delete payload.newPassword;
-                delete payload.confirmPassword;
-            } else {
-                payload.password = payload.newPassword;
-                delete payload.newPassword;
-                delete payload.confirmPassword;
+                delete payload.oldPassword;
             }
 
             const response = await fetch('https://bot.kediritechnopark.com/webhook/profile', {
@@ -175,7 +171,7 @@ const ProfileTab = () => {
                                 <label><strong>Old Password:</strong></label>
                                 <input
                                     type="password"
-                                    name="newPassword"
+                                    name="oldPassword"
                                     onChange={handleChange}
                                     className={styles.editableInput}
                                 />
@@ -184,7 +180,7 @@ const ProfileTab = () => {
                                 <label><strong>New Password:</strong></label>
                                 <input
                                     type="password"
-                                    name="confirmPassword"
+                                    name="newPassword"
                                     onChange={handleChange}
                                     className={styles.editableInput}
                                 />
