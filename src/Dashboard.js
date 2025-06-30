@@ -364,37 +364,53 @@ const Dashboard = () => {
       }
     }
   };
-
 const handleBatchUpload = async () => {
   const token = localStorage.getItem('token');
+  const newFiles = [];
 
   for (const file of selectedFiles) {
     const formData = new FormData();
-    formData.append('file', file); // Kirim satu per satu file
+    formData.append('file', file);
 
     const response = await fetch('https://bot.kediritechnopark.com/webhook/files/upload', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
-        // ❗Jangan set 'Content-Type' untuk FormData, biarkan browser mengaturnya
       },
       body: formData
     });
 
-    if (!response.ok) {
+    if (response.ok) {
+      newFiles.push({
+        json: {
+          Key: file.name,
+          LastModified: new Date().toISOString(),
+          Size: file.size,
+          StorageClass: 'STANDARD'
+        }
+      });
+    } else {
       console.error(`Upload gagal untuk file ${file.name}`);
     }
   }
 
+  // ✅ Set fileList sekaligus
+  setFileList((prev) => [...prev, ...newFiles]);
   alert('Upload selesai');
-  setSelectedFiles([]); // Kosongkan setelah selesai upload
+  setSelectedFiles([]);
 };
 
-  const handleBatchDelete = async () => {
-    if (!window.confirm(`Yakin ingin menghapus ${selectedKeys.length} file?`)) return;
-    const token = localStorage.getItem('token');
 
-    for (const key of selectedKeys) {
+
+const handleBatchDelete = async () => {
+  if (!window.confirm(`Yakin ingin menghapus ${selectedKeys.length} file?`)) return;
+
+  const token = localStorage.getItem('token');
+  const successKeys = [];
+  const failedKeys = [];
+
+  for (const key of selectedKeys) {
+    try {
       const response = await fetch(
         `https://bot.kediritechnopark.com/webhook/files/delete?key=${encodeURIComponent(key)}`,
         {
@@ -404,10 +420,34 @@ const handleBatchUpload = async () => {
           }
         }
       );
-    }
 
-    setSelectedKeys([]);
-  };
+      if (response.ok) {
+        successKeys.push(key);
+      } else {
+        failedKeys.push(key);
+      }
+    } catch (err) {
+      console.error(`Gagal menghapus ${key}`, err);
+      failedKeys.push(key);
+    }
+  }
+
+  // ✅ Update fileList sekaligus
+  setFileList((prev) =>
+    prev.filter((file) => !successKeys.includes(file.json.Key))
+  );
+
+  // ✅ Kosongkan selected
+  setSelectedKeys([]);
+
+  // ✅ Beri feedback ke user
+  if (failedKeys.length === 0) {
+    alert('File berhasil dihapus.');
+  } else {
+    alert(`Sebagian gagal dihapus:\n${failedKeys.join('\n')}`);
+  }
+};
+
 
   // ⬇️ Jika masih loading, tampilkan full white screen
   if (loading) {
