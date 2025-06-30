@@ -4,13 +4,14 @@
 }
 
 .uploadContainer {
+  overflow: hidden;
   margin-top: 16px;
   border: 2px dashed #ccc;
   border-radius: 12px;
-  padding: 32px;
   text-align: center;
   cursor: pointer;
   transition: border-color 0.3s;
+  padding-bottom: 30px;
 }
 
 .uploadContainer:hover {
@@ -96,6 +97,7 @@
 
 .desktopText {
   display: block;
+    /* padding: 32px; */
 }
 
 .mobileText {
@@ -115,10 +117,12 @@
   padding: 8px 12px;
   border-radius: 8px 0 0 8px;
   display: inline-block;
+  margin-bottom: 10px;
 }
 
 .fileInfoClose {
   margin-left: 2px;
+  margin-right: 6px;
   margin-top: 16px;
   font-size: 14px;
   color: #ff0000;
@@ -128,6 +132,17 @@
   border-radius: 0 8px 8px 0;
   display: inline-block;
 
+}
+
+.fileUpload {
+  margin-top: 16px;
+  font-size: 14px;
+  color: white;
+  background: #2bb438;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-bottom: 10px;
 }
 
 /* Mobile styles */
@@ -243,3 +258,41 @@ position: absolute;
 .dropdownItem:hover {
   background-color: #f0f0f0;
 }
+
+.fileTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 40px;
+}
+
+.fileTable th,
+.fileTable td {
+  border-bottom: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+}
+
+.fileTable th {
+  background-color: #f2f2f2;
+}
+
+.actionBar {
+  margin-bottom: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+.actionBar button {
+  padding: 6px 12px;
+  background-color: #00adef;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.actionBar button:hover {
+  background-color: #0095cc;
+}
+

@@ -152,16 +152,30 @@
   transition: all 0.2s ease;
 }
 
-.quickReply:hover {
+/* .quickReply:hover {
   background: #075e54;
   color: white;
   border-color: #075e54;
-}
+} */
 
-.quickReply:hover::placeholder {
+/* .quickReply:hover::placeholder {
+  color: white;
+} */
+
+.nextButton {
+  background: #075e54;
+  border: 1px solid #ccc;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
   color: white;
 }
 
+.nextButton:hover::placeholder {
+  color: #ccc;
+}
 .quickReply2 {
   width: 100%;
   background: #fff;
@@ -174,13 +188,13 @@
   transition: all 0.2s ease;
 }
 
-.quickReply2:hover {
+/* .quickReply2:hover {
   background: #075e54;
   color: white;
   border-color: #075e54;
   border: 1px solid #075e54;
-}
+} */
 
-.quickReply2:hover::placeholder {
+/* .quickReply2:hover::placeholder {
   color: white;
-}
+} */

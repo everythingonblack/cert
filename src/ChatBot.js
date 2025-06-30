@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ChatBot.module.css';
 
-const ChatBot = ({ existingConversation, readOnly, hh }) => {
+const ChatBot = ({ existingConversation }) => {
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: 'Hai Dermalovers! 👋 Saya siap membantu anda tampil lebih percaya diri. Ada pertanyaan seputar perawatan kulit atau kecantikan hari ini?',
+      text: 'Hai! Saya Alle, asisten virtual Dermalounge Clinic. Ada yang bisa Alle bantu hari ini?',
       time: getTime(),
       quickReplies: [
-        'Konsultasi estetik',
-        'Konsultasi kulit dan kelamin'
+        'Konsultasi Estetik',
+        'Konsultasi Kulit & Kelamin'
       ],
     },
   ]);
+
 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -231,8 +232,7 @@ function formatBoldText(text) {
               </div>
 
               <div
-                className={styles.quickReply}
-                style={{ color: name.length > 2 && phoneNumber.length >= 10 ? 'black' : '#ccc' }}
+                className={styles.nextButton}
                 onClick={() => {
                   if (name.length > 2 && phoneNumber.length >= 10) {
                     const sessionData = JSON.parse(localStorage.getItem('session')) || {};

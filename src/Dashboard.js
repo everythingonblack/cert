@@ -22,6 +22,9 @@ const Dashboard = () => {
   const [modalContent, setModalContent] = useState(null);
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(true); // ⬅️ Tambahkan state loading
+  const [fileList, setFileList] = useState([]);
+  const [selectedKeys, setSelectedKeys] = useState([]);
+
 
   const [stats, setStats] = useState({
     totalChats: 0,
@@ -29,15 +32,19 @@ const Dashboard = () => {
   });
 
   const [isDragging, setIsDragging] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   const navigate = useNavigate();
 
-  const handleFile = (file) => {
-    if (file) {
-      setSelectedFile(file);
-    }
+  const handleFiles = (files) => {
+    const newFiles = files.filter(file => {
+      // Hindari duplikat berdasarkan nama (atau bisa pakai hash/md5 jika perlu)
+      return !selectedFiles.some(f => f.name === file.name);
+    });
+
+    setSelectedFiles((prev) => [...prev, ...newFiles]);
   };
+
 
 
   const handleLogout = () => {
@@ -90,16 +97,17 @@ const Dashboard = () => {
           return;
         }
 
-        if (!response.ok) {
-          throw new Error('Fetch gagal dengan status: ' + response.status);
-        }
+        // if (!response.ok) {
+        //   throw new Error('Fetch gagal dengan status: ' + response.status);
+        // }
 
         const data = await response.json();
         console.log(data);
-        setDiscussedTopics(data?.result?.topics)
-        setFollowUps(data?.result?.interested_users)
-
-        const graphObj = data.result.graph;
+        setDiscussedTopics(data?.graph[0]?.json?.result?.topics)
+        setFollowUps(data?.graph[0]?.json?.result?.interested_users)
+        setFileList(data?.files)
+        const graphObj = data?.graph[0]?.json?.result?.graph;
+        console.log(graphObj)
         const rawDataArray = Object.entries(graphObj).map(([hour, sesi]) => ({
           hour,
           sesi,
@@ -144,51 +152,51 @@ const Dashboard = () => {
 
   }, [navigate]);
 
-useEffect(() => {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.ready.then(async (registration) => {
-      const subscription = await registration.pushManager.getSubscription();
-      if (!subscription) {
-        // Belum subscribe → tampilkan prompt
-        setModalContent(
-          <NotificationPrompt
-            onAllow={subscribeUser}
-            onDismiss={() => setModalContent('')}
-          />
-        );
-      } else {
-        // Sudah subscribe → tidak perlu panggil subscribeUser lagi
-        console.log('User is already subscribed.');
-        setModalContent('');
-        subscribeUser();
-      }
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(async (registration) => {
+        const subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+          // Belum subscribe → tampilkan prompt
+          setModalContent(
+            <NotificationPrompt
+              onAllow={subscribeUser}
+              onDismiss={() => setModalContent('')}
+            />
+          );
+        } else {
+          // Sudah subscribe → tidak perlu panggil subscribeUser lagi
+          console.log('User is already subscribed.');
+          setModalContent('');
+          subscribeUser();
+        }
+      });
+    }
+  }, []);
+
+
+  const subscribeUser = async () => {
+    setModalContent('');
+    const registration = await navigator.serviceWorker.ready;
+
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array('BPT-ypQB0Z7HndmeFhRR7AMjDujCLSbOQ21VoVHLQg9MOfWhEZ7SKH5cMjLqkXHl2sTuxdY2rjHDOAxhRK2G2K4'),
     });
-  }
-}, []);
 
+    const token = localStorage.getItem('token');
 
-const subscribeUser = async () => {
-  setModalContent('');
-  const registration = await navigator.serviceWorker.ready;
+    await fetch('https://bot.kediritechnopark.com/webhook/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ subscription }),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
 
-  const subscription = await registration.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array('BPT-ypQB0Z7HndmeFhRR7AMjDujCLSbOQ21VoVHLQg9MOfWhEZ7SKH5cMjLqkXHl2sTuxdY2rjHDOAxhRK2G2K4'),
-  });
-
-  const token = localStorage.getItem('token');
-
-  await fetch('https://bot.kediritechnopark.com/webhook/subscribe', {
-    method: 'POST',
-    body: JSON.stringify({ subscription }),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-
-  setModalContent('');
-};
+    setModalContent('');
+  };
 
 
   function urlBase64ToUint8Array(base64String) {
@@ -298,6 +306,109 @@ const subscribeUser = async () => {
     });
   }, [rawData]);
 
+  const handleDeleteFile = async (key) => {
+    if (!window.confirm(`Yakin ingin menghapus "${key}"?`)) return;
+    const token = localStorage.getItem('token');
+
+    try {
+      await fetch("https://bot.kediritechnopark.com/webhook/files/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ key }),
+      });
+
+      // fetchFiles(); // Refresh list
+    } catch (error) {
+      console.error("Gagal menghapus file:", error);
+    }
+  };
+
+  const handleBatchDownload = async () => {
+    const token = localStorage.getItem('token');
+    for (const key of selectedKeys) {
+      try {
+        const response = await fetch(
+          `https://bot.kediritechnopark.com/webhook/files/download?key=${encodeURIComponent(key)}`,
+          {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+
+        if (!response.ok) throw new Error('Gagal download');
+
+        const blob = await response.blob();
+
+        // Coba ambil nama file dari header Content-Disposition (jika tersedia)
+        let filename = key;
+        const disposition = response.headers.get('Content-Disposition');
+        if (disposition && disposition.includes('filename=')) {
+          const match = disposition.match(/filename="?(.+?)"?$/);
+          if (match) filename = match[1];
+        }
+
+        // Buat URL dan download
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error(`Gagal download ${key}:`, err);
+      }
+    }
+  };
+
+const handleBatchUpload = async () => {
+  const token = localStorage.getItem('token');
+
+  for (const file of selectedFiles) {
+    const formData = new FormData();
+    formData.append('file', file); // Kirim satu per satu file
+
+    const response = await fetch('https://bot.kediritechnopark.com/webhook/files/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+        // ❗Jangan set 'Content-Type' untuk FormData, biarkan browser mengaturnya
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      console.error(`Upload gagal untuk file ${file.name}`);
+    }
+  }
+
+  alert('Upload selesai');
+  setSelectedFiles([]); // Kosongkan setelah selesai upload
+};
+
+  const handleBatchDelete = async () => {
+    if (!window.confirm(`Yakin ingin menghapus ${selectedKeys.length} file?`)) return;
+    const token = localStorage.getItem('token');
+
+    for (const key of selectedKeys) {
+      const response = await fetch(
+        `https://bot.kediritechnopark.com/webhook/files/delete?key=${encodeURIComponent(key)}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+    }
+
+    setSelectedKeys([]);
+  };
+
   // ⬇️ Jika masih loading, tampilkan full white screen
   if (loading) {
     return <div style={{ backgroundColor: 'white', width: '100vw', height: '100vh' }} />;
@@ -354,52 +465,125 @@ const subscribeUser = async () => {
         <h2 className={styles.chartTitle}>Interactions</h2>
         <canvas ref={chartRef}></canvas>
       </div>
-
       <div className={styles.chartSection}>
         <h2 className={styles.chartTitle}>Update data</h2>
 
+        {/* ✅ TOMBOL AKSI */}
+        {selectedKeys.length > 0 && (
+          <div className={styles.actionBar}>
+            <button onClick={handleBatchDownload}>⬇️ Download</button>
+            <button onClick={handleBatchDelete}>🗑️ Hapus</button>
+          </div>
+        )}
+
+        {/* ✅ AREA UPLOAD */}
         <div
           className={`${styles.uploadContainer} ${isDragging ? styles.dragActive : ""}`}
-          onClick={() => selectedFile ? null : document.getElementById("fileInput").click()}
           onDragOver={(e) => {
             e.preventDefault();
             setIsDragging(true);
           }}
           onDragLeave={() => setIsDragging(false)}
+
           onDrop={(e) => {
             e.preventDefault();
             setIsDragging(false);
-            const file = e.dataTransfer.files[0];
-            handleFile(file);
+            const files = Array.from(e.dataTransfer.files);
+            handleFiles(files);
           }}
         >
+
+          {/* ✅ TABEL FILE */}
+          <table className={styles.fileTable}>
+            <thead>
+              <tr>
+                <th>
+                  <input
+                    type="checkbox"
+                    checked={fileList.length > 0 && selectedKeys.length === fileList.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedKeys(fileList.map((f) => f.json.Key));
+                      } else {
+                        setSelectedKeys([]);
+                      }
+                    }}
+                  />
+                </th>
+                <th>select all</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fileList.map((file, index) => (
+                <tr key={index}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedKeys.includes(file.json.Key)}
+                      onChange={() => {
+                        setSelectedKeys((prev) =>
+                          prev.includes(file.json.Key)
+                            ? prev.filter((key) => key !== file.json.Key)
+                            : [...prev, file.json.Key]
+                        );
+                      }}
+                    />
+                  </td>
+                  <td>{file.json.Key}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
           <p className={styles.desktopText}>
-            Drop file here, or <span className={styles.uploadLink}>Click to upload</span>
+            Drop file here, or <span onClick={() => document.getElementById("fileInput").click()} className={styles.uploadLink}>Click to upload</span>
           </p>
-          <p className={styles.mobileText}>Click to upload</p>
+          <p className={styles.mobileText} onClick={() => document.getElementById("fileInput").click()}>Click to upload</p>
 
-          {selectedFile && (
-            <>
-              <div className={styles.fileInfo}>
-                <strong>{selectedFile.name}</strong>
-              </div>
-              <div className={styles.fileInfoClose} onClick={() => setSelectedFile(null)}>
-                X
-              </div>
-            </>
-          )}
 
+              <div>
+                
+      {selectedFiles.length > 0 && 
+  selectedFiles.map((file, index) => (
+    <div>
+    <div key={index} className={styles.fileInfo}>
+      <strong>{file.name}</strong>
+    </div>
+      <div
+        className={styles.fileInfoClose}
+        onClick={() =>
+          setSelectedFiles((prev) => prev.filter((_, i) => i !== index))
+        }
+      >
+        X
+      </div>
+      </div>
+))}
+
+{selectedFiles.length > 0 &&
+<div>
+    <div onClick={()=>handleBatchUpload()} className={styles.fileUpload}>
+      <strong>Upload</strong>
+    </div>
+    </div>
+    }
+              </div>
           <input
             id="fileInput"
             type="file"
+            multiple
             style={{ display: "none" }}
             onChange={(e) => {
-              const file = e.target.files[0];
-              handleFile(file);
+              const files = Array.from(e.target.files);
+              handleFiles(files);
             }}
           />
+
         </div>
       </div>
+
+
+
 
       <div className={styles.footer}>
         &copy; 2025 Kediri Technopark
