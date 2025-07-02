@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Modal from './Modal';
 import Conversations from './Conversations';
 import DiscussedTopics from './DiscussedTopics';
+import StatCard from './StatCard'
 
 import FollowUps from './FollowUps';
 
@@ -36,14 +37,60 @@ const Dashboard = () => {
 
   const navigate = useNavigate();
 
-  const handleFiles = (files) => {
-    const newFiles = files.filter(file => {
-      // Hindari duplikat berdasarkan nama (atau bisa pakai hash/md5 jika perlu)
-      return !selectedFiles.some(f => f.name === file.name);
+const handleFiles = async (files) => {
+  const filteredFiles = [];
+
+  for (const file of files) {
+    const lowerName = file.name.toLowerCase();
+    const nameWithoutExt = lowerName.replace(/\.[^/.]+$/, '');
+
+    // 1️⃣ Cegah duplikat dari file yang sudah dipilih sebelumnya
+    const alreadySelected = selectedFiles.some(f =>
+      f.name.toLowerCase() === file.name.toLowerCase()
+    );
+    if (alreadySelected) continue;
+
+    // 2️⃣ Cari file server yang mirip (berisi / mengandung)
+    const similarFile = fileList.find(f => {
+      const serverName = f.json.Key.toLowerCase();
+      const serverNameWithoutExt = serverName.replace(/\.[^/.]+$/, '');
+
+      return (
+        serverName.includes(lowerName) ||
+        lowerName.includes(serverName) ||
+        serverNameWithoutExt.includes(nameWithoutExt) ||
+        nameWithoutExt.includes(serverNameWithoutExt)
+      );
     });
 
-    setSelectedFiles((prev) => [...prev, ...newFiles]);
-  };
+    if (similarFile) {
+      const confirmOverwrite = window.confirm(
+        `File "${file.name}" mirip atau mengandung "${similarFile.json.Key}" di server.\nIngin menimpa file tersebut?`
+      );
+
+      if (confirmOverwrite) {
+        // Ganti nama agar ditimpa
+        Object.defineProperty(file, 'name', {
+          writable: true,
+          value: similarFile.json.Key,
+        });
+        filteredFiles.push(file); // tetap tambahkan
+      } else {
+        // Tidak ditimpa, tetap pakai nama asli
+        filteredFiles.push(file); // tambahkan tanpa modifikasi nama
+      }
+    } else {
+      // Tidak ada kemiripan, langsung tambahkan
+      filteredFiles.push(file);
+    }
+  }
+
+  if (filteredFiles.length > 0) {
+    setSelectedFiles(prev => [...prev, ...filteredFiles]);
+  }
+};
+
+
 
 
 
@@ -364,89 +411,89 @@ const Dashboard = () => {
       }
     }
   };
-const handleBatchUpload = async () => {
-  const token = localStorage.getItem('token');
-  const newFiles = [];
+  const handleBatchUpload = async () => {
+    const token = localStorage.getItem('token');
+    const newFiles = [];
 
-  for (const file of selectedFiles) {
-    const formData = new FormData();
-    formData.append('file', file);
+    for (const file of selectedFiles) {
+      const formData = new FormData();
+      formData.append('file', file);
 
-    const response = await fetch('https://bot.kediritechnopark.com/webhook/files/upload', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
-      body: formData
-    });
-
-    if (response.ok) {
-      newFiles.push({
-        json: {
-          Key: file.name,
-          LastModified: new Date().toISOString(),
-          Size: file.size,
-          StorageClass: 'STANDARD'
-        }
+      const response = await fetch('https://bot.kediritechnopark.com/webhook/files/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
       });
-    } else {
-      console.error(`Upload gagal untuk file ${file.name}`);
-    }
-  }
-
-  // ✅ Set fileList sekaligus
-  setFileList((prev) => [...prev, ...newFiles]);
-  alert('Upload selesai');
-  setSelectedFiles([]);
-};
-
-
-
-const handleBatchDelete = async () => {
-  if (!window.confirm(`Yakin ingin menghapus ${selectedKeys.length} file?`)) return;
-
-  const token = localStorage.getItem('token');
-  const successKeys = [];
-  const failedKeys = [];
-
-  for (const key of selectedKeys) {
-    try {
-      const response = await fetch(
-        `https://bot.kediritechnopark.com/webhook/files/delete?key=${encodeURIComponent(key)}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
 
       if (response.ok) {
-        successKeys.push(key);
+        newFiles.push({
+          json: {
+            Key: file.name,
+            LastModified: new Date().toISOString(),
+            Size: file.size,
+            StorageClass: 'STANDARD'
+          }
+        });
       } else {
+        console.error(`Upload gagal untuk file ${file.name}`);
+      }
+    }
+
+    // ✅ Set fileList sekaligus
+    setFileList((prev) => [...prev, ...newFiles]);
+    alert('Upload selesai');
+    setSelectedFiles([]);
+  };
+
+
+
+  const handleBatchDelete = async () => {
+    if (!window.confirm(`Yakin ingin menghapus ${selectedKeys.length} file?`)) return;
+
+    const token = localStorage.getItem('token');
+    const successKeys = [];
+    const failedKeys = [];
+
+    for (const key of selectedKeys) {
+      try {
+        const response = await fetch(
+          `https://bot.kediritechnopark.com/webhook/files/delete?key=${encodeURIComponent(key)}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+
+        if (response.ok) {
+          successKeys.push(key);
+        } else {
+          failedKeys.push(key);
+        }
+      } catch (err) {
+        console.error(`Gagal menghapus ${key}`, err);
         failedKeys.push(key);
       }
-    } catch (err) {
-      console.error(`Gagal menghapus ${key}`, err);
-      failedKeys.push(key);
     }
-  }
 
-  // ✅ Update fileList sekaligus
-  setFileList((prev) =>
-    prev.filter((file) => !successKeys.includes(file.json.Key))
-  );
+    // ✅ Update fileList sekaligus
+    setFileList((prev) =>
+      prev.filter((file) => !successKeys.includes(file.json.Key))
+    );
 
-  // ✅ Kosongkan selected
-  setSelectedKeys([]);
+    // ✅ Kosongkan selected
+    setSelectedKeys([]);
 
-  // ✅ Beri feedback ke user
-  if (failedKeys.length === 0) {
-    alert('File berhasil dihapus.');
-  } else {
-    alert(`Sebagian gagal dihapus:\n${failedKeys.join('\n')}`);
-  }
-};
+    // ✅ Beri feedback ke user
+    if (failedKeys.length === 0) {
+      alert('File berhasil dihapus.');
+    } else {
+      alert(`Sebagian gagal dihapus:\n${failedKeys.join('\n')}`);
+    }
+  };
 
 
   // ⬇️ Jika masih loading, tampilkan full white screen
@@ -491,10 +538,7 @@ const handleBatchDelete = async () => {
           <h2>{stats.botMessages}</h2>
           <p>AI RESPONSE</p>
         </div>
-        <div className={styles.statCard} onClick={() => setModalContent(<FollowUps data={followUps} />)}>
-          <h2>{followUps.length}</h2>
-          <p>BOOKING REQUEST</p>
-        </div>
+        <StatCard followUps={followUps} setModalContent={setModalContent} />
         <div className={styles.statCard} onClick={openTopicsModal}>
           <h2 style={{ fontSize: '17px' }}>{discussedTopics[0]?.topic}</h2>
           <p>Top topic</p>
@@ -581,33 +625,33 @@ const handleBatchDelete = async () => {
           <p className={styles.mobileText} onClick={() => document.getElementById("fileInput").click()}>Click to upload</p>
 
 
-              <div>
-                
-      {selectedFiles.length > 0 && 
-  selectedFiles.map((file, index) => (
-    <div>
-    <div key={index} className={styles.fileInfo}>
-      <strong>{file.name}</strong>
-    </div>
-      <div
-        className={styles.fileInfoClose}
-        onClick={() =>
-          setSelectedFiles((prev) => prev.filter((_, i) => i !== index))
-        }
-      >
-        X
-      </div>
-      </div>
-))}
+          <div>
 
-{selectedFiles.length > 0 &&
-<div>
-    <div onClick={()=>handleBatchUpload()} className={styles.fileUpload}>
-      <strong>Upload</strong>
-    </div>
-    </div>
-    }
+            {selectedFiles.length > 0 &&
+              selectedFiles.map((file, index) => (
+                <div key={index}>
+                  <div key={index} className={styles.fileInfo}>
+                    <strong>{file.name}</strong>
+                  </div>
+                  <div
+                    className={styles.fileInfoClose}
+                    onClick={() =>
+                      setSelectedFiles((prev) => prev.filter((_, i) => i !== index))
+                    }
+                  >
+                    X
+                  </div>
+                </div>
+              ))}
+
+            {selectedFiles.length > 0 &&
+              <div>
+                <div onClick={() => handleBatchUpload()} className={styles.fileUpload}>
+                  <strong>Upload</strong>
+                </div>
               </div>
+            }
+          </div>
           <input
             id="fileInput"
             type="file"
@@ -626,7 +670,7 @@ const handleBatchDelete = async () => {
 
 
       <div className={styles.footer}>
-        &copy; 2025 Kediri Technopark
+        &copy; 2025 Dermalounge
       </div>
 
       {modalContent && <Modal onClose={() => setModalContent(null)}>{modalContent}</Modal>}

@@ -69,7 +69,7 @@ const Login = () => {
           </button>
         </form>
         <div className={styles.footer}>
-          &copy; 2025 Kediri Technopark
+          &copy; 2025 Dermalounge
         </div>
       </div>
     </div>

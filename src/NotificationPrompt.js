@@ -5,16 +5,25 @@ export default function NotificationPrompt({ onAllow, onDismiss }) {
   return (
     <div className={styles.backdrop}>
       <div className={styles.modal}>
-        <h2 className={styles.title}>Enable Notifications</h2>
-        <p className={styles.description}>
-          Stay up to date with important updates and alerts. Enable push notifications to never miss a thing.
-        </p>
+        <div className={styles.iconWrapper}>
+          <div className={styles.notificationIcon}>🔔</div>
+        </div>
+        
+        <div className={styles.content}>
+          <h2 className={styles.title}>Aktifkan Notifikasi</h2>
+          <p className={styles.description}>
+            Tetap terhubung dengan update penting dan peringatan terbaru. 
+            Aktifkan notifikasi push agar tidak ketinggalan informasi penting.
+          </p>
+        </div>
+
         <div className={styles.actions}>
           <button onClick={onAllow} className={styles.primaryButton}>
-            Enable Notifications
+            <span className={styles.buttonIcon}>✓</span>
+            Aktifkan Notifikasi
           </button>
           <button onClick={onDismiss} className={styles.secondaryButton}>
-            Maybe Later
+            Nanti Saja
           </button>
         </div>
       </div>

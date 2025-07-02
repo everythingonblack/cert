@@ -1,110 +1,316 @@
+/* FollowUps.module.css */
 .container {
-  background-color: #f7f9fa;
-  font-family: 'Amazon Ember', sans-serif;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-.title {
-  font-size: 22px;
-  font-weight: 600;
-  color: #16191f;
-  margin-bottom: 20px;
-  text-align: center;
+/* Filter Section */
+.filterSection {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.filterGroup {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.filterItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.filterLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin: 0;
+}
+
+.filterSelect {
+  padding: 10px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 36px;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.filterSelect:hover {
+  border-color: #cbd5e1;
+}
+
+.resultCount {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+  padding: 8px 12px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+/* Cards Grid */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
 }
 
 .card {
-  background-color: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  transition: box-shadow 0.2s ease;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e1;
 }
 
-.header {
+.cardHeader {
+  padding: 20px 20px 12px;
+  border-bottom: 1px solid #f1f5f9;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 4px;
+  gap: 12px;
 }
 
-.header h3 {
+.userName {
   font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
   margin: 0;
-  color: #232f3e;
+  flex: 1;
 }
 
-.date {
+.statusBadge {
+  flex-shrink: 0;
+}
+
+.badgeSuccess {
+  background: #dcfce7;
+  color: #166534;
+  padding: 4px 8px;
+  border-radius: 6px;
   font-size: 12px;
+  font-weight: 500;
+}
+
+.badgeProgress {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badgePending {
+  background: #f3f4f6;
   color: #6b7280;
-  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.cardContent {
+  padding: 12px 20px 20px;
 }
 
 .notes {
-  margin: 12px 0;
-  color: #374151;
+  color: #4b5563;
   font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 16px 0;
+  word-break: break-word;
 }
 
-.footer {
+.contactInfo {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
 }
 
-.contact {
-  font-size: 13px;
-  color: #374151;
-  word-break: break-all;
-}
-
-.chatBtn {
-  background-color: #25d366;
-  color: #ffffff;
-  text-decoration: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 13px;
+.contactLabel {
+  font-size: 12px;
+  color: #6b7280;
   font-weight: 500;
-  transition: background-color 0.2s ease;
-  white-space: nowrap;
 }
 
-.chatBtn:hover {
-  background-color: #1da851;
+.contactValue {
+  font-size: 14px;
+  color: #374151;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+.dateInfo {
+  font-size: 12px;
+  color: #9ca3af;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border-left: 3px solid #e5e7eb;
+}
+
+.cardActions {
+  padding: 16px 20px;
+  border-top: 1px solid #f1f5f9;
+  background: #fafbfc;
+}
+
+.actionBtn {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btnPrimary {
+  background: #25d366;
+  color: white;
+}
+
+.btnPrimary:hover {
+  background: #1da851;
+  transform: translateY(-1px);
+}
+
+.btnComplete {
+  background: #3b82f6;
+  color: white;
+}
+
+.btnComplete:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btnSuccess {
+  background: #10b981;
+  color: white;
+  cursor: default;
+}
+
+/* Empty State */
+.emptyState {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.emptyState p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+  
+  .filterSection {
+    padding: 16px;
+  }
+  
+  .filterGroup {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .filterItem {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .cardHeader {
+    padding: 16px 16px 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .cardContent {
+    padding: 10px 16px 16px;
+  }
+  
+  .cardActions {
+    padding: 12px 16px;
+  }
+  
+  .actionBtn {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
 }
 
 @media (max-width: 480px) {
-  .title {
-    font-size: 18px;
-  }
-
-  .card {
+  .container {
     padding: 12px;
   }
-
+  
+  .userName {
+    font-size: 16px;
+  }
+  
   .notes {
     font-size: 13px;
   }
-
-  .chatBtn {
-    padding: 6px 10px;
-    font-size: 12px;
+  
+  .statusBadge span {
+    font-size: 11px;
+    padding: 3px 6px;
   }
 }
