@@ -25,6 +25,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true); // ⬅️ Tambahkan state loading
   const [fileList, setFileList] = useState([]);
   const [selectedKeys, setSelectedKeys] = useState([]);
+  const [updateDetected, setUpdateDetected] = useState([]);
 
 
   const [stats, setStats] = useState({
@@ -37,58 +38,108 @@ const Dashboard = () => {
 
   const navigate = useNavigate();
 
-const handleFiles = async (files) => {
-  const filteredFiles = [];
+  const handleFiles = async (files) => {
+    const filteredFiles = [];
 
-  for (const file of files) {
-    const lowerName = file.name.toLowerCase();
-    const nameWithoutExt = lowerName.replace(/\.[^/.]+$/, '');
+    for (const file of files) {
+      const lowerName = file.name.toLowerCase();
+      const nameWithoutExt = lowerName.replace(/\.[^/.]+$/, '');
 
-    // 1️⃣ Cegah duplikat dari file yang sudah dipilih sebelumnya
-    const alreadySelected = selectedFiles.some(f =>
-      f.name.toLowerCase() === file.name.toLowerCase()
-    );
-    if (alreadySelected) continue;
-
-    // 2️⃣ Cari file server yang mirip (berisi / mengandung)
-    const similarFile = fileList.find(f => {
-      const serverName = f.json.Key.toLowerCase();
-      const serverNameWithoutExt = serverName.replace(/\.[^/.]+$/, '');
-
-      return (
-        serverName.includes(lowerName) ||
-        lowerName.includes(serverName) ||
-        serverNameWithoutExt.includes(nameWithoutExt) ||
-        nameWithoutExt.includes(serverNameWithoutExt)
+      // 1️⃣ Cegah duplikat dari file yang sudah dipilih sebelumnya
+      const alreadySelected = selectedFiles.some(f =>
+        f.name.toLowerCase() === file.name.toLowerCase()
       );
-    });
+      if (alreadySelected) continue;
 
-    if (similarFile) {
-      const confirmOverwrite = window.confirm(
-        `File "${file.name}" mirip atau mengandung "${similarFile.json.Key}" di server.\nIngin menimpa file tersebut?`
-      );
+      // 2️⃣ Cek apakah ada file server dengan nama persis
+      const exactMatch = fileList.find(f => {
+        const serverKey = f.json.Key;
+        console.log(`Checking: "${serverKey}" === "${file.name}"`);
+        return serverKey === file.name;
+      });
 
-      if (confirmOverwrite) {
-        // Ganti nama agar ditimpa
-        Object.defineProperty(file, 'name', {
-          writable: true,
-          value: similarFile.json.Key,
-        });
-        filteredFiles.push(file); // tetap tambahkan
-      } else {
-        // Tidak ditimpa, tetap pakai nama asli
-        filteredFiles.push(file); // tambahkan tanpa modifikasi nama
+
+      if (exactMatch) {
+        const confirmOverwrite = window.confirm(
+          `File "${file.name}" sudah ada di server sebagai "${exactMatch.json.Key}".\nIngin menimpa file tersebut?`
+        );
+
+        if (confirmOverwrite) {
+          // Ganti nama agar ditimpa
+          Object.defineProperty(file, 'name', {
+            writable: true,
+            value: exactMatch.json.Key,
+          });
+          filteredFiles.push(file);
+        } else {
+  let counter = 1;
+  const extMatch = file.name.match(/(\.[^/.]+)$/);
+  const extension = extMatch ? extMatch[1] : '';
+  const baseName = file.name.replace(/\.[^/.]+$/, '');
+
+  let tryName = `${baseName} (${counter})${extension}`.trim();
+
+  const existingNames = [
+    ...fileList.map(f => f.json.Key.toLowerCase()),
+    ...selectedFiles.map(f => f.name.toLowerCase())
+  ];
+
+  while (existingNames.includes(tryName.toLowerCase())) {
+    counter++;
+    tryName = `${baseName} (${counter})${extension}`.trim();
+  }
+
+  Object.defineProperty(file, 'name', {
+    writable: true,
+    value: tryName,
+  });
+
+  filteredFiles.push(file);
+        }
+        continue; // Lewati ke file berikutnya karena sudah ditangani
       }
-    } else {
-      // Tidak ada kemiripan, langsung tambahkan
-      filteredFiles.push(file);
-    }
-  }
 
-  if (filteredFiles.length > 0) {
-    setSelectedFiles(prev => [...prev, ...filteredFiles]);
-  }
-};
+      // 3️⃣ Jika tidak ada yang sama persis, cari yang mirip
+      const similarFile = fileList.find(f => {
+        const serverName = f.json.Key.toLowerCase();
+        const serverNameWithoutExt = serverName.replace(/\.[^/.]+$/, '');
+
+        return (
+          serverName.includes(lowerName) ||
+          lowerName.includes(serverName) ||
+          serverNameWithoutExt.includes(nameWithoutExt) ||
+          nameWithoutExt.includes(serverNameWithoutExt)
+        );
+      });
+
+      if (similarFile) {
+        const confirmOverwrite = window.confirm(
+          `File "${file.name}" mirip atau mengandung "${similarFile.json.Key}" di server.\nIngin menimpa file tersebut?`
+        );
+
+        if (confirmOverwrite) {
+          Object.defineProperty(file, 'name', {
+            writable: true,
+            value: similarFile.json.Key,
+          });
+          filteredFiles.push(file);
+        } else {
+          Object.defineProperty(file, 'name', {
+            writable: true,
+            value: file.name.replace(/(\.[^/.]+)$/, ' (1)$1'),
+          });
+          filteredFiles.push(file);
+        }
+      } else {
+        filteredFiles.push(file);
+      }
+    }
+
+    if (filteredFiles.length > 0) {
+      setSelectedFiles(prev => [...prev, ...filteredFiles]);
+    }
+  };
+
 
 
 
@@ -150,10 +201,11 @@ const handleFiles = async (files) => {
 
         const data = await response.json();
         console.log(data);
-        setDiscussedTopics(data?.graph[0]?.json?.result?.topics)
-        setFollowUps(data?.graph[0]?.json?.result?.interested_users)
-        setFileList(data?.files)
-        const graphObj = data?.graph[0]?.json?.result?.graph;
+        setDiscussedTopics(data[0]?.graph[0]?.json?.result?.topics)
+        setFollowUps(data[0]?.graph[0]?.json?.result?.interested_users)
+        setFileList(data[0]?.files)
+        setUpdateDetected(data[1]?.updateDetected)
+        const graphObj = data[0]?.graph[0]?.json?.result?.graph;
         console.log(graphObj)
         const rawDataArray = Object.entries(graphObj).map(([hour, sesi]) => ({
           hour,
@@ -411,13 +463,14 @@ const handleFiles = async (files) => {
       }
     }
   };
+
   const handleBatchUpload = async () => {
     const token = localStorage.getItem('token');
     const newFiles = [];
 
     for (const file of selectedFiles) {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', file, file.name);
 
       const response = await fetch('https://bot.kediritechnopark.com/webhook/files/upload', {
         method: 'POST',
@@ -428,24 +481,32 @@ const handleFiles = async (files) => {
       });
 
       if (response.ok) {
-        newFiles.push({
+        const newFile = {
           json: {
             Key: file.name,
             LastModified: new Date().toISOString(),
             Size: file.size,
             StorageClass: 'STANDARD'
           }
+        };
+
+        // 1️⃣ Hapus file lama dari fileList yang punya nama sama
+        setFileList(prev => {
+          const filtered = prev.filter(f => f.json.Key !== file.name);
+          return [...filtered, newFile];
         });
+
+        newFiles.push(newFile);
+        setUpdateDetected(true);
       } else {
         console.error(`Upload gagal untuk file ${file.name}`);
       }
     }
 
-    // ✅ Set fileList sekaligus
-    setFileList((prev) => [...prev, ...newFiles]);
     alert('Upload selesai');
     setSelectedFiles([]);
   };
+
 
 
 
@@ -493,6 +554,32 @@ const handleFiles = async (files) => {
     } else {
       alert(`Sebagian gagal dihapus:\n${failedKeys.join('\n')}`);
     }
+  };
+
+   const handleBatchPush = async () => {
+    if (!window.confirm(`Yakin ingin mengupdate pengetahuan AI?`)) return;
+
+    const token = localStorage.getItem('token');
+      try {
+        const response = await fetch(
+          `https://bot.kediritechnopark.com/webhook/files/push`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+
+        if (response.ok) {
+      alert('Pengetahuan berhasil diperbarui.');
+        } else {
+        alert(`Gagal memperbarui pengetahuan AI`);
+        }
+      } catch (err) {
+        alert(`Gagal memperbarui pengetahuan AI`);
+      }
+    
   };
 
 
@@ -550,15 +637,14 @@ const handleFiles = async (files) => {
         <canvas ref={chartRef}></canvas>
       </div>
       <div className={styles.chartSection}>
-        <h2 className={styles.chartTitle}>Update data</h2>
+        <h2 className={styles.chartTitle}>Update AI data</h2>
 
         {/* ✅ TOMBOL AKSI */}
-        {selectedKeys.length > 0 && (
-          <div className={styles.actionBar}>
-            <button onClick={handleBatchDownload}>⬇️ Download</button>
-            <button onClick={handleBatchDelete}>🗑️ Hapus</button>
-          </div>
-        )}
+        <div className={styles.actionBar}>
+          <button onClick={handleBatchDownload} disabled={selectedKeys.length < 1}>⬇️ Download</button>
+          <button onClick={handleBatchDelete} disabled={selectedKeys.length < 1}>🗑️ Delete</button>
+          {updateDetected && <button onClick={handleBatchPush}>🔄 Update</button>}
+        </div>
 
         {/* ✅ AREA UPLOAD */}
         <div
