@@ -173,6 +173,14 @@ function formatBoldText(text) {
                       {reply}
                     </div>
                   ))}
+                    <div
+                      className={styles.quickReply}
+                      onClick={() => sendMessage('analist')}
+                      style={{color: 'white', backgroundColor: '#075e54', display: 'flex', flexDirection: 'row', alignItems:'center'}}
+                    >
+                      <img style={{marginRight: '5px', height: '14px', filter: 'invert(1)'}}src={'/face.png'}/>
+                      Analisa Wajah
+                    </div>
                 </div>
               )}
               <div className={styles.timestamp}>{msg.time}</div>
