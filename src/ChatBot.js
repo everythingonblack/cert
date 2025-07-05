@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ChatBot.module.css';
+import Camera from './Camera'
 
 const ChatBot = ({ existingConversation }) => {
   const [messages, setMessages] = useState([
@@ -22,6 +23,8 @@ const ChatBot = ({ existingConversation }) => {
   const [isPoppedUp, setIsPoppedUp] = useState('');
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+
+  const [isOpenCamera, setIsOpenCamera] = useState(false);
   useEffect(() => {
 
     if (existingConversation && existingConversation.length > 0) {
@@ -129,6 +132,9 @@ function formatBoldText(text) {
   });
 }
 
+const handleUploadImage = (e) => {
+  console.log(e)
+}
 
   return (
     <div className={styles.chatContainer} >
@@ -175,11 +181,11 @@ function formatBoldText(text) {
                   ))}
                     <div
                       className={styles.quickReply}
-                      onClick={() => sendMessage('analist')}
+                      onClick={() => setIsOpenCamera(true)}
                       style={{color: 'white', backgroundColor: '#075e54', display: 'flex', flexDirection: 'row', alignItems:'center'}}
                     >
                       <img style={{marginRight: '5px', height: '14px', filter: 'invert(1)'}}src={'/face.png'}/>
-                      Analisa Wajah
+                      Analisa Kulit
                     </div>
                 </div>
               )}
@@ -260,6 +266,7 @@ function formatBoldText(text) {
           </div>
         </div>
       }
+      {isOpenCamera && <Camera handleClose={()=>setIsOpenCamera(false)} handleUploadImage={(e)=>handleUploadImage(e)}/>}
     </div>
   );
 };
