@@ -21,28 +21,33 @@ const CameraPage = ({ handleClose, handleUploadImage }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  useEffect(() => {
-    const startCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' },
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (error) {
-        console.error('Error accessing camera:', error);
-      }
-    };
-    startCamera();
+useEffect(() => {
+  let stream;
 
-    return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const tracks = videoRef.current.srcObject.getTracks();
-        tracks.forEach(track => track.stop());
+  const startCamera = async () => {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+      });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
       }
-    };
-  }, []);
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+    }
+  };
+
+  startCamera();
+
+  // Clean-up logic (seperti socket.off)
+  return () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+  };
+}, []);
+
 
   const captureImage = () => {
     const canvas = canvasRef.current;

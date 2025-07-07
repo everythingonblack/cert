@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ChatBot.module.css';
 import Camera from './Camera';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 
 const ChatBot = ({ existingConversation }) => {
   const [messages, setMessages] = useState([
@@ -15,12 +16,16 @@ const ChatBot = ({ existingConversation }) => {
     },
   ]);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+const navigate = useNavigate();
+
+const isOpenCamera = searchParams.get('camera') === 'open';
+
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState('');
   const [isPoppedUp, setIsPoppedUp] = useState('');
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [isOpenCamera, setIsOpenCamera] = useState(false);
 
   useEffect(() => {
     if (existingConversation && existingConversation.length > 0) {
@@ -114,8 +119,7 @@ const ChatBot = ({ existingConversation }) => {
   };
 
   const handleUploadImage = async (img) => {
-    setIsOpenCamera(false);
-
+  setSearchParams({  })
     const newMessages = [
       ...messages,
       { sender: 'user', img: img, time: getTime() },
@@ -228,7 +232,7 @@ const ChatBot = ({ existingConversation }) => {
                 ? (msg.text ?
                   msg.text
                   :
-                  <img style={{ height: '160px', borderRadius: '12px' }} src={msg.img} />
+                  <img style={{ maxHeight: '300px', maxWidth: '240px', borderRadius: '12px' }} src={msg.img} />
                 )
                 : (() => {
                   try {
@@ -250,7 +254,7 @@ const ChatBot = ({ existingConversation }) => {
                   ))}
                   <div
                     className={styles.quickReply}
-                    onClick={() => setIsOpenCamera(true)}
+                    onClick={() => setSearchParams({ camera: 'open' })}
                     style={{ color: 'white', backgroundColor: '#075e54', display: 'flex', flexDirection: 'row', alignItems: 'center' }}
                   >
                     <img style={{ marginRight: '5px', height: '14px', filter: 'invert(1)' }} src={'/camera.png'} />
@@ -282,7 +286,7 @@ const ChatBot = ({ existingConversation }) => {
           />
         </button>
 
-        <button onClick={() => setIsOpenCamera(true)} disabled={isLoading!=''}>
+        <button onClick={() => setSearchParams({ camera: 'open' })} disabled={isLoading!=''}>
           <img
             src="/camera.png"
             alt="Kamera"
@@ -345,7 +349,7 @@ const ChatBot = ({ existingConversation }) => {
 
       {isOpenCamera && (
         <Camera
-          handleClose={() => setIsOpenCamera(false)}
+          handleClose={() => setSearchParams({})}
           handleUploadImage={(e) => handleUploadImage(e)}
         />
       )}
