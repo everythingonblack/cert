@@ -5,11 +5,11 @@ const CameraPage = ({ handleClose, handleUploadImage }) => {
   const [isCameraActive, setIsCameraActive] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isUploadedFile, setIsUploadedFile] = useState(false); // ✅ NEW STATE
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Check if device is mobile
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -21,7 +21,6 @@ const CameraPage = ({ handleClose, handleUploadImage }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Start the camera when the component mounts
   useEffect(() => {
     const startCamera = async () => {
       try {
@@ -37,7 +36,6 @@ const CameraPage = ({ handleClose, handleUploadImage }) => {
     };
     startCamera();
 
-    // Cleanup camera stream when component unmounts
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         const tracks = videoRef.current.srcObject.getTracks();
@@ -46,7 +44,6 @@ const CameraPage = ({ handleClose, handleUploadImage }) => {
     };
   }, []);
 
-  // Capture the image from the video stream
   const captureImage = () => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
@@ -61,10 +58,10 @@ const CameraPage = ({ handleClose, handleUploadImage }) => {
       const capturedImage = canvas.toDataURL('image/jpeg');
       setImage(capturedImage);
       setIsCameraActive(false);
+      setIsUploadedFile(false); // ✅ from camera
     }
   };
 
-  // Handle image upload from file input
   const handleFileUpload = e => {
     const file = e.target.files[0];
     if (file) {
@@ -72,15 +69,17 @@ const CameraPage = ({ handleClose, handleUploadImage }) => {
       reader.onloadend = () => {
         setImage(reader.result);
         setIsCameraActive(false);
+        setIsUploadedFile(true); // ✅ from file
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Cancel the image capture or file upload and restart the camera
   const cancelCapture = () => {
     setImage(null);
     setIsCameraActive(true);
+    setIsUploadedFile(false); // ✅ reset
+
     const startCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -96,71 +95,96 @@ const CameraPage = ({ handleClose, handleUploadImage }) => {
     startCamera();
   };
 
-  // Trigger file input click
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
 
   const mainContent = (
     <div style={containerStyle}>
-      {/* Camera/Image Display Area */}
       <div style={cameraContainerStyle}>
         {isCameraActive && (
           <video ref={videoRef} autoPlay playsInline style={videoStyle} />
         )}
 
         {!isCameraActive && image && (
-          <img src={image} alt="Captured or Uploaded" style={imageStyle} />
+          <img
+            src={image}
+            alt="Captured or Uploaded"
+            style={{
+              ...imageStyle,
+              objectFit: isUploadedFile ? 'contain' : 'cover',
+              backgroundColor: '#000',
+            }}
+          />
         )}
 
-        {/* Floating Controls */}
         <div style={controlsStyle}>
           {isCameraActive ? (
             <>
               <button
-                onClick={handleClose}
-                style={cancelButtonStyle}
+                onClick={() => {
+                  handleClose();
+                }}
+                style={baseButtonStyle}
                 aria-label="Cancel and retake"
               >
-                ❌
+                <img
+                  src="/back.png"
+                  alt="Kamera"
+                  style={{ height: '26px' }}
+                />  
               </button>
               <button
                 onClick={captureImage}
-                style={captureButtonStyle}
+                style={baseButtonStyle}
                 aria-label="Capture photo"
               >
-                📸
+                <img
+                  src="/camera.png"
+                  alt="Kamera"
+                  style={{ height: '24px' }}
+                />
               </button>
               <button
                 onClick={triggerFileInput}
-                style={uploadButtonStyle}
+                style={baseButtonStyle}
                 aria-label="Upload from gallery"
               >
-                📁
+                <img
+                  src="/upload.png"
+                  alt="Kamera"
+                  style={{ height: '24px' }}
+                />
               </button>
             </>
           ) : (
             <>
               <button
                 onClick={cancelCapture}
-                style={cancelButtonStyle}
+                style={baseButtonStyle}
                 aria-label="Cancel and retake"
               >
-                ❌
+                <img
+                  src="/back.png"
+                  alt="Kamera"
+                  style={{ height: '26px' }}
+                />  
               </button>
               <button
-                onClick={() => handleUploadImage(image)} // Pass image data here
-                style={confirmButtonStyle}
+                onClick={() => handleUploadImage(image)}
+                style={baseButtonStyle}
                 disabled={uploading}
                 aria-label={uploading ? 'Uploading...' : 'Confirm upload'}
               >
-                {uploading ? '⏳' : '✅'}
-              </button>
+                <img
+                  src="/send.png"
+                  alt="Kamera"
+                  style={{ height: '24px' }}
+                />              </button>
             </>
           )}
         </div>
 
-        {/* Hidden file input */}
         <input
           ref={fileInputRef}
           type="file"
@@ -170,28 +194,20 @@ const CameraPage = ({ handleClose, handleUploadImage }) => {
         />
       </div>
 
-      {/* Hidden canvas element for capturing the image */}
       <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
     </div>
   );
 
-  // Desktop layout with left and right sidebars
   if (!isMobile) {
     return (
       <div style={desktopLayoutStyle}>
-        {/* Left Sidebar */}
         <div style={sidebarStyle}></div>
-
-        {/* Main content */}
         <div style={mainContentStyle}>{mainContent}</div>
-
-        {/* Right Sidebar */}
         <div style={sidebarStyle}></div>
       </div>
     );
   }
 
-  // Mobile layout (full screen)
   return mainContent;
 };
 
@@ -222,7 +238,6 @@ const videoStyle = {
 const imageStyle = {
   width: '100%',
   height: '100%',
-  objectFit: 'cover',
 };
 
 const controlsStyle = {
@@ -249,23 +264,6 @@ const baseButtonStyle = {
   transition: 'all 0.2s ease',
 };
 
-const captureButtonStyle = {
-  ...baseButtonStyle,
-  backgroundColor: '#fff',
-  color: '#000',
-};
-
-const uploadButtonStyle = {
-  ...baseButtonStyle,
-  backgroundColor: '#4CAF50',
-  color: '#fff',
-};
-
-const cancelButtonStyle = {
-  ...baseButtonStyle,
-  backgroundColor: '#f44336',
-  color: '#fff',
-};
 
 const confirmButtonStyle = {
   ...baseButtonStyle,
@@ -273,7 +271,6 @@ const confirmButtonStyle = {
   color: '#fff',
 };
 
-// Desktop styles
 const desktopLayoutStyle = {
   display: 'flex',
   height: '100vh',
@@ -287,26 +284,6 @@ const sidebarStyle = {
   padding: '20px',
   boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
   borderRight: '1px solid #e0e0e0',
-};
-
-const sidebarTitleStyle = {
-  margin: '0 0 30px 0',
-  fontSize: '24px',
-  fontWeight: 'bold',
-  color: '#333',
-};
-
-const sidebarContentStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '15px',
-};
-
-const sidebarTextStyle = {
-  margin: '0',
-  fontSize: '16px',
-  lineHeight: '1.4',
-  color: '#666',
 };
 
 const mainContentStyle = {

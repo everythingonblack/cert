@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ChatBot.module.css';
-import Camera from './Camera'
+import Camera from './Camera';
 
 const ChatBot = ({ existingConversation }) => {
   const [messages, setMessages] = useState([
@@ -15,22 +15,19 @@ const ChatBot = ({ existingConversation }) => {
     },
   ]);
 
-
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-
+  const [isLoading, setIsLoading] = useState('');
   const [isPoppedUp, setIsPoppedUp] = useState('');
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-
   const [isOpenCamera, setIsOpenCamera] = useState(false);
-  useEffect(() => {
 
+  useEffect(() => {
     if (existingConversation && existingConversation.length > 0) {
       setMessages(existingConversation);
     }
-  }, [existingConversation])
+  }, [existingConversation]);
+
   useEffect(() => {
     if (!localStorage.getItem('session')) {
       function generateUUID() {
@@ -48,19 +45,107 @@ const ChatBot = ({ existingConversation }) => {
     }
   }, []);
 
+  function base64ToFile(base64Data, filename) {
+    const arr = base64Data.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+
+    return new File([u8arr], filename, { type: mime });
+  }
+
+  const askToBot = async ({ type = 'text', content, tryCount = 0 }) => {
+    const session = JSON.parse(localStorage.getItem('session'));
+    if (!session || !session.sessionId) return;
+
+    let body;
+    let headers;
+
+    const isBase64Image = type === 'image' && typeof content === 'string' && content.startsWith('data:image/');
+
+    if (isBase64Image) {
+      const file = base64ToFile(content, 'photo.jpg');
+      const formData = new FormData();
+      formData.append('sessionId', session.sessionId);
+      formData.append('lastSeen', new Date().toISOString());
+      formData.append('name', session.name || '');
+      formData.append('phoneNumber', session.phoneNumber || '');
+      formData.append('type', type);
+      formData.append('image', file);
+
+      body = formData;
+      headers = {};
+    } else {
+      body = JSON.stringify({
+        sessionId: session.sessionId,
+        lastSeen: new Date().toISOString(),
+        name: session.name,
+        phoneNumber: session.phoneNumber,
+        pertanyaan: content,
+        type: type,
+      });
+      headers = { 'Content-Type': 'application/json' };
+    }
+
+    try {
+      const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/ask', {
+        method: 'POST',
+        headers,
+        body,
+      });
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      if (tryCount < 3) {
+        return new Promise((resolve) =>
+          setTimeout(() => resolve(askToBot({ type, content, tryCount: tryCount + 1 })), 3000)
+        );
+      } else {
+        console.error('Bot unavailable:', error);
+        return { jawaban: 'Maaf saya sedang tidak tersedia sekarang, coba lagi nanti' };
+      }
+    }
+  };
+
+  const handleUploadImage = async (img) => {
+    setIsOpenCamera(false);
+
+    const newMessages = [
+      ...messages,
+      { sender: 'user', img: img, time: getTime() },
+    ];
+    setMessages(newMessages);
+    setIsLoading('Menganalisa gambar anda...');
+
+    const data = await askToBot({ type: 'image', content: img });
+
+    const botAnswer = data.jawaban || 'Maaf, saya tidak bisa menganalisis gambar tersebut.';
+
+    setMessages((prev) => [
+      ...prev,
+      { sender: 'bot', text: botAnswer, time: getTime() },
+    ]);
+
+    setIsLoading('');
+  };
+
   const sendMessage = async (textOverride = null, name, phoneNumber, tryCount = 0) => {
     const message = textOverride || input.trim();
     if (message === '') return;
 
     const session = JSON.parse(localStorage.getItem('session'));
-
-    if ((!session ||   !session.name || !session.phoneNumber) && messages.length > 2) {
-      setIsPoppedUp(message); // munculkan form input
+    if ((!session || !session.name || !session.phoneNumber) && messages.length > 2) {
+      setIsPoppedUp(message);
       setInput('');
       return;
     }
 
-    // Show user's message immediately
     const newMessages = [
       ...messages,
       { sender: 'user', text: message, time: getTime() },
@@ -68,87 +153,68 @@ const ChatBot = ({ existingConversation }) => {
 
     setMessages(newMessages);
     setInput('');
-    
-    setIsLoading(true);
-    try {
-      // Send to backend
-      const response = await fetch('https://bot.kediritechnopark.com/webhook/master-agent/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pertanyaan: message, sessionId: JSON.parse(localStorage.getItem('session')).sessionId, lastSeen: new Date().toISOString(), name: JSON.parse(localStorage.getItem('session')).name, phoneNumber: JSON.parse(localStorage.getItem('session')).phoneNumber }),
-      });
+    setIsLoading('Mengetik...');
 
-      const data = await response.json();
-      console.log(data)
-      // Assuming your backend sends back something like: { answer: "text" }
-      // Adjust this according to your actual response shape
+    try {
+      const data = await askToBot({ type: 'text', content: message, tryCount });
+
       const botAnswer = data.jawaban || 'Maaf saya sedang tidak tersedia sekarang, coba lagi nanti';
 
-      // Add bot's reply
       setMessages(prev => [
         ...prev,
         { sender: 'bot', text: botAnswer, time: getTime() },
       ]);
 
-      setIsLoading(false);
+      setIsLoading('');
     } catch (error) {
-      console.log(tryCount)
-      if (tryCount > 3) {
-        // Add bot's error reply
+      console.error('Error sending message:', error);
+      if (tryCount >= 3) {
         setMessages(prev => [
           ...prev,
           { sender: 'bot', text: 'Maaf saya sedang tidak tersedia sekarang, coba lagi nanti', time: getTime() },
         ]);
-        setIsLoading(false);
-        return;
+        setIsLoading('');
+      } else {
+        setTimeout(() => sendMessage(message, name, phoneNumber, tryCount + 1), 3000);
       }
-      setTimeout(() => sendMessage(message, name, phoneNumber, tryCount + 1), 3000);
-
-      console.error('Fetch error:', error);
     }
   };
-function formatBoldText(text) {
-  const parts = text.split(/(\*\*[^\*]+\*\*)/g);
 
-  return parts.flatMap((part, index) => {
-    const elements = [];
+  function formatBoldText(text) {
+    const parts = text.split(/(\*\*[^\*]+\*\*)/g);
 
-    if (part.startsWith('**') && part.endsWith('**')) {
-      // Bold text
-      part = part.slice(2, -2);
-      part.split('\n').forEach((line, i) => {
-        if (i > 0) elements.push(<br key={`br-bold-${index}-${i}`} />);
-        elements.push(<strong key={`bold-${index}-${i}`}>{line}</strong>);
-      });
-    } else {
-      // Normal text
-      part.split('\n').forEach((line, i) => {
-        if (i > 0) elements.push(<br key={`br-${index}-${i}`} />);
-        elements.push(<span key={`text-${index}-${i}`}>{line}</span>);
-      });
-    }
+    return parts.flatMap((part, index) => {
+      const elements = [];
 
-    return elements;
-  });
-}
+      if (part.startsWith('**') && part.endsWith('**')) {
+        part = part.slice(2, -2);
+        part.split('\n').forEach((line, i) => {
+          if (i > 0) elements.push(<br key={`br-bold-${index}-${i}`} />);
+          elements.push(<strong key={`bold-${index}-${i}`}>{line}</strong>);
+        });
+      } else {
+        part.split('\n').forEach((line, i) => {
+          if (i > 0) elements.push(<br key={`br-${index}-${i}`} />);
+          elements.push(<span key={`text-${index}-${i}`}>{line}</span>);
+        });
+      }
 
-const handleUploadImage = (e) => {
-  console.log(e)
-}
+      return elements;
+    });
+  }
 
   return (
-    <div className={styles.chatContainer} >
+    <div className={styles.chatContainer}>
       <div className={styles.chatHeader}>
         <img src="/dermalounge.jpg" alt="Bot Avatar" />
         <strong>DERMALOUNGE</strong>
       </div>
 
       <div className={styles.chatBody}>
-
-        {isLoading && (
+        {isLoading != '' && (
           <div className={`${styles.messageRow} ${styles.bot}`}>
             <div className={`${styles.message} ${styles.bot}`}>
-              <em>Mengetik...</em>
+              <em>{isLoading}</em>
             </div>
           </div>
         )}
@@ -159,15 +225,18 @@ const handleUploadImage = (e) => {
           >
             <div className={`${styles.message} ${styles[msg.sender]}`}>
               {msg.sender !== 'bot'
-  ? msg.text
-  : (() => {
-      try {
-        return formatBoldText(msg.text);    // Apply formatting here
-      } catch (e) {
-        return msg.text;
-      }
-    })()}
-
+                ? (msg.text ?
+                  msg.text
+                  :
+                  <img style={{ height: '160px', borderRadius: '12px' }} src={msg.img} />
+                )
+                : (() => {
+                  try {
+                    return formatBoldText(msg.text);
+                  } catch (e) {
+                    return msg.text;
+                  }
+                })()}
               {msg.quickReplies && (
                 <div className={styles.quickReplies}>
                   {msg.quickReplies.map((reply, i) => (
@@ -179,14 +248,14 @@ const handleUploadImage = (e) => {
                       {reply}
                     </div>
                   ))}
-                    <div
-                      className={styles.quickReply}
-                      onClick={() => setIsOpenCamera(true)}
-                      style={{color: 'white', backgroundColor: '#075e54', display: 'flex', flexDirection: 'row', alignItems:'center'}}
-                    >
-                      <img style={{marginRight: '5px', height: '14px', filter: 'invert(1)'}}src={'/face.png'}/>
-                      Analisa Kulit
-                    </div>
+                  <div
+                    className={styles.quickReply}
+                    onClick={() => setIsOpenCamera(true)}
+                    style={{ color: 'white', backgroundColor: '#075e54', display: 'flex', flexDirection: 'row', alignItems: 'center' }}
+                  >
+                    <img style={{ marginRight: '5px', height: '14px', filter: 'invert(1)' }} src={'/camera.png'} />
+                    Analisa Gambar
+                  </div>
                 </div>
               )}
               <div className={styles.timestamp}>{msg.time}</div>
@@ -195,21 +264,34 @@ const handleUploadImage = (e) => {
         ))}
       </div>
 
-      <div className={styles.chatInput} /*/style={{ visibility: readOnly ? 'hidden' : 'visible'}}/*/>
+      <div className={styles.chatInput}>
         <input
           type="text"
           placeholder="Ketik pesan..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-          disabled={isLoading}
+          disabled={isLoading != ''}
         />
 
-        <button onClick={() => sendMessage()} disabled={isLoading}>
-          Kirim
+        <button onClick={() => sendMessage()} style={{marginLeft: '-40px'}}disabled={isLoading!=''}>
+          <img
+            src="/send.png"
+            alt="Kirim"
+            style={{ height: '20px', filter: 'invert(1)' }}
+          />
+        </button>
+
+        <button onClick={() => setIsOpenCamera(true)} disabled={isLoading!=''}>
+          <img
+            src="/camera.png"
+            alt="Kamera"
+            style={{ height: '18px', filter: 'invert(1)' }}
+          />
         </button>
       </div>
-      {isPoppedUp != '' &&
+
+      {isPoppedUp !== '' &&
         <div className={styles.PopUp}>
           <div className={`${styles.message} ${styles['bot']}`}>
             Untuk bisa membantu Anda lebih jauh, boleh saya tahu nama dan nomor telepon Anda?
@@ -218,7 +300,6 @@ const handleUploadImage = (e) => {
               <input
                 className={styles.quickReply}
                 placeholder="Nama Lengkapmu"
-                onFocus={() => console.log('Nama focused')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 maxLength={40}
@@ -235,14 +316,11 @@ const handleUploadImage = (e) => {
                   value={phoneNumber}
                   onChange={(e) => {
                     const value = e.target.value;
-                    // Hanya angka, maksimal 11 karakter
                     if (/^\d{0,11}$/.test(value)) {
                       setPhoneNumber(value);
                     }
                   }}
-                  onFocus={() => console.log('Telepon focused')}
                 />
-
               </div>
 
               <div
@@ -250,13 +328,11 @@ const handleUploadImage = (e) => {
                 onClick={() => {
                   if (name.length > 2 && phoneNumber.length >= 10) {
                     const sessionData = JSON.parse(localStorage.getItem('session')) || {};
-
                     sessionData.name = name;
                     sessionData.phoneNumber = phoneNumber;
-
                     localStorage.setItem('session', JSON.stringify(sessionData));
-                    setIsPoppedUp('')
-                    sendMessage(isPoppedUp)
+                    setIsPoppedUp('');
+                    sendMessage(isPoppedUp);
                   }
                 }}
               >
@@ -266,7 +342,13 @@ const handleUploadImage = (e) => {
           </div>
         </div>
       }
-      {isOpenCamera && <Camera handleClose={()=>setIsOpenCamera(false)} handleUploadImage={(e)=>handleUploadImage(e)}/>}
+
+      {isOpenCamera && (
+        <Camera
+          handleClose={() => setIsOpenCamera(false)}
+          handleUploadImage={(e) => handleUploadImage(e)}
+        />
+      )}
     </div>
   );
 };
