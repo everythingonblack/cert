@@ -220,7 +220,7 @@ useEffect(() => {
 const containerStyle = {
   position: 'absolute',
   width: '100%',
-  height: '100vh',
+  height: '100%',
   backgroundColor: '#000',
   overflow: 'hidden',
 };
@@ -246,7 +246,7 @@ const imageStyle = {
 };
 
 const controlsStyle = {
-  position: 'absolute',
+  position: 'fixed',
   bottom: '30px',
   left: '50%',
   transform: 'translateX(-50%)',
