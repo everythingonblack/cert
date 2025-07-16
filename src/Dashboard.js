@@ -200,6 +200,8 @@ const Dashboard = () => {
         // }
 
         const data = await response.json();
+
+        try{
         console.log(data);
         setDiscussedTopics(data[0]?.graph[0]?.json?.result?.topics)
         setFollowUps(data[0]?.graph[0]?.json?.result?.interested_users)
@@ -212,6 +214,7 @@ const Dashboard = () => {
           sesi,
         }));
         setRawData(rawDataArray);
+
         let totalSessions = new Set();
         let botMessages = 0;
 
@@ -228,6 +231,10 @@ const Dashboard = () => {
           totalChats: totalSessions.size,
           botMessages,
         });
+        }
+        catch{
+          
+        }
 
         setLoading(false); // ⬅️ Setelah berhasil, hilangkan loading
       } catch (error) {
@@ -430,7 +437,7 @@ const Dashboard = () => {
     for (const key of selectedKeys) {
       try {
         const response = await fetch(
-          `https://bot.kediritechnopark.com/webhook/files/download?key=${encodeURIComponent(key)}`,
+          `https://bot.kediritechnopark.com/webhook/dermalounge/files/download?key=${encodeURIComponent(key)}`,
           {
             method: 'GET',
             headers: {
@@ -472,7 +479,7 @@ const Dashboard = () => {
       const formData = new FormData();
       formData.append('file', file, file.name);
 
-      const response = await fetch('https://bot.kediritechnopark.com/webhook/files/upload', {
+      const response = await fetch('https://bot.kediritechnopark.com/webhook/dermalounge/files/upload', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -520,7 +527,7 @@ const Dashboard = () => {
     for (const key of selectedKeys) {
       try {
         const response = await fetch(
-          `https://bot.kediritechnopark.com/webhook/files/delete?key=${encodeURIComponent(key)}`,
+          `https://bot.kediritechnopark.com/webhook/dermalounge/files/delete?key=${encodeURIComponent(key)}`,
           {
             method: 'DELETE',
             headers: {

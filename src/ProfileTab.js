@@ -11,7 +11,7 @@ const ProfileTab = () => {
     const [profileTemp, setProfileTemp] = useState({});
 
     const licenses = [
-        { id: 1, type: "Current Subscription", number: "DRML-2025-AI001", validUntil: "June 30 2025" },
+        { id: 1, type: "Monthly Subscription", number: "DRML-2025-AI001", validUntil: "July 31 2025" },
     ];
 
     useEffect(() => {
@@ -146,7 +146,7 @@ const ProfileTab = () => {
                         </div>
                     )}
                 </div>
-                <img src={profile?.image || '/no-brand.jpg'} alt="Bot Avatar" />
+                <img src={profile?.image || '/dermalounge.jpg'} alt="Bot Avatar" />
                 <div>
                     <h1 className={styles.h1}>Dermalounge AI Admin Profile</h1>
                 </div>
