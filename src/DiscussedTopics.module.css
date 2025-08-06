@@ -185,3 +185,34 @@
     font-size: 11px;
   }
 }
+
+.tabButtons {
+  display: flex;
+  gap: 10px;
+}
+
+.tabButton {
+  background-color: #eee;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.activeTab {
+  background-color: #007bff;
+  color: white;
+}
+
+.description {
+  margin-top: 6px;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.phone {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: #666;
+}

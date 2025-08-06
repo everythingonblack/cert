@@ -22,6 +22,7 @@ const Dashboard = () => {
 
   const [weeklyData, setWeeklyData] = useState([]);
   const [allTimeData, setAllTimeData] = useState([]);
+  const [faceAnalystList, setFaceAnalystList] = useState([]);
 
   const [conversations, setConversations] = useState([]);
   const [followUps, setFollowUps] = useState([]);
@@ -318,6 +319,8 @@ function parseGraphData(graph) {
         try{
         console.log(data);
         setDiscussedTopics(data[0]?.graph[0]?.json?.result?.topics)
+            setFaceAnalystList(data[0]?.graph[0]?.json?.result?.analyst_counter);
+
         setFollowUps(data[0]?.graph[0]?.json?.result?.interested_users)
         setFileList(data[0]?.files)
         setUpdateDetected(data[1]?.updateDetected)
@@ -437,7 +440,7 @@ function parseGraphData(graph) {
   };
 
   const openTopicsModal = () => {
-    setModalContent(<DiscussedTopics topics={discussedTopics} />);
+    setModalContent(<DiscussedTopics topics={discussedTopics} faceAnalystList={faceAnalystList} />);
   };
 
   const handleDeleteFile = async (key) => {

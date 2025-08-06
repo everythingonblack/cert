@@ -9,17 +9,13 @@ const ChatBot = ({ existingConversation }) => {
       sender: 'bot',
       text: 'Hai! Saya Alle, asisten virtual Dermalounge Clinic. Ada yang bisa Alle bantu hari ini?',
       time: getTime(),
-      quickReplies: [
-        'Konsultasi Estetik',
-        'Konsultasi Kulit & Kelamin'
-      ],
+      quickReplies: ['Konsultasi Estetik', 'Konsultasi Kulit & Kelamin'],
     },
   ]);
 
   const [searchParams, setSearchParams] = useSearchParams();
-const navigate = useNavigate();
-
-const isOpenCamera = searchParams.get('camera') === 'open';
+  const navigate = useNavigate();
+  const isOpenCamera = searchParams.get('camera') === 'open';
 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState('');
@@ -45,8 +41,7 @@ const isOpenCamera = searchParams.get('camera') === 'open';
 
       const sessionId = generateUUID();
       const dateNow = new Date().toISOString();
-
-      sessionStorage.setItem('session', JSON.stringify({ sessionId: sessionId, lastSeen: dateNow }))
+      sessionStorage.setItem('session', JSON.stringify({ sessionId, lastSeen: dateNow }));
     }
   }, []);
 
@@ -56,11 +51,9 @@ const isOpenCamera = searchParams.get('camera') === 'open';
     const bstr = atob(arr[1]);
     let n = bstr.length;
     const u8arr = new Uint8Array(n);
-
     while (n--) {
       u8arr[n] = bstr.charCodeAt(n);
     }
-
     return new File([u8arr], filename, { type: mime });
   }
 
@@ -70,7 +63,6 @@ const isOpenCamera = searchParams.get('camera') === 'open';
 
     let body;
     let headers;
-
     const isBase64Image = type === 'image' && typeof content === 'string' && content.startsWith('data:image/');
 
     if (isBase64Image) {
@@ -82,7 +74,6 @@ const isOpenCamera = searchParams.get('camera') === 'open';
       formData.append('phoneNumber', session.phoneNumber || '');
       formData.append('type', type);
       formData.append('image', file);
-
       body = formData;
       headers = {};
     } else {
@@ -103,7 +94,6 @@ const isOpenCamera = searchParams.get('camera') === 'open';
         headers,
         body,
       });
-
       const data = await response.json();
       return data;
     } catch (error) {
@@ -119,7 +109,14 @@ const isOpenCamera = searchParams.get('camera') === 'open';
   };
 
   const handleUploadImage = async (img) => {
-  setSearchParams({  })
+    const session = JSON.parse(sessionStorage.getItem('session'));
+    if (!session?.name || !session?.phoneNumber) {
+      setIsPoppedUp(img); // simpan gambar untuk dikirim setelah user isi data
+      setSearchParams({});
+      return;
+    }
+
+    setSearchParams({});
     const newMessages = [
       ...messages,
       { sender: 'user', img: img, time: getTime() },
@@ -128,14 +125,12 @@ const isOpenCamera = searchParams.get('camera') === 'open';
     setIsLoading('Menganalisa gambar anda...');
 
     const data = await askToBot({ type: 'image', content: img });
-
     const botAnswer = data.jawaban || 'Maaf, saya tidak bisa menganalisis gambar tersebut.';
 
     setMessages((prev) => [
       ...prev,
       { sender: 'bot', text: botAnswer, time: getTime() },
     ]);
-
     setIsLoading('');
   };
 
@@ -150,25 +145,19 @@ const isOpenCamera = searchParams.get('camera') === 'open';
       return;
     }
 
-    const newMessages = [
-      ...messages,
-      { sender: 'user', text: message, time: getTime() },
-    ];
-
+    const newMessages = [...messages, { sender: 'user', text: message, time: getTime() }];
     setMessages(newMessages);
     setInput('');
     setIsLoading('Mengetik...');
 
     try {
       const data = await askToBot({ type: 'text', content: message, tryCount });
-
       const botAnswer = data.jawaban || 'Maaf saya sedang tidak tersedia sekarang, coba lagi nanti';
 
       setMessages(prev => [
         ...prev,
         { sender: 'bot', text: botAnswer, time: getTime() },
       ]);
-
       setIsLoading('');
     } catch (error) {
       console.error('Error sending message:', error);
@@ -186,10 +175,8 @@ const isOpenCamera = searchParams.get('camera') === 'open';
 
   function formatBoldText(text) {
     const parts = text.split(/(\*\*[^\*]+\*\*)/g);
-
     return parts.flatMap((part, index) => {
       const elements = [];
-
       if (part.startsWith('**') && part.endsWith('**')) {
         part = part.slice(2, -2);
         part.split('\n').forEach((line, i) => {
@@ -202,7 +189,6 @@ const isOpenCamera = searchParams.get('camera') === 'open';
           elements.push(<span key={`text-${index}-${i}`}>{line}</span>);
         });
       }
-
       return elements;
     });
   }
@@ -215,7 +201,7 @@ const isOpenCamera = searchParams.get('camera') === 'open';
       </div>
 
       <div className={styles.chatBody}>
-        {isLoading != '' && (
+        {isLoading !== '' && (
           <div className={`${styles.messageRow} ${styles.bot}`}>
             <div className={`${styles.message} ${styles.bot}`}>
               <em>{isLoading}</em>
@@ -223,39 +209,30 @@ const isOpenCamera = searchParams.get('camera') === 'open';
           </div>
         )}
         {messages.slice().reverse().map((msg, index) => (
-          <div
-            key={index}
-            className={`${styles.messageRow} ${styles[msg.sender]}`}
-          >
+          <div key={index} className={`${styles.messageRow} ${styles[msg.sender]}`}>
             <div className={`${styles.message} ${styles[msg.sender]}`}>
-              {msg.sender !== 'bot'
-                ? (msg.text ?
-                  msg.text
-                  :
-                  <img style={{ maxHeight: '300px', maxWidth: '240px', borderRadius: '12px' }} src={msg.img} />
-                )
-                : (() => {
+              {msg.sender !== 'bot' ? (
+                msg.text ? msg.text : <img style={{ maxHeight: '300px', maxWidth: '240px', borderRadius: '12px' }} src={msg.img} />
+              ) : (
+                (() => {
                   try {
                     return formatBoldText(msg.text);
                   } catch (e) {
                     return msg.text;
                   }
-                })()}
+                })()
+              )}
               {msg.quickReplies && (
                 <div className={styles.quickReplies}>
                   {msg.quickReplies.map((reply, i) => (
-                    <div
-                      key={i}
-                      className={styles.quickReply}
-                      onClick={() => sendMessage(reply)}
-                    >
+                    <div key={i} className={styles.quickReply} onClick={() => sendMessage(reply)}>
                       {reply}
                     </div>
                   ))}
                   <div
                     className={styles.quickReply}
                     onClick={() => setSearchParams({ camera: 'open' })}
-                    style={{ color: 'white', backgroundColor: '#075e54', display: 'flex', flexDirection: 'row', alignItems: 'center' }}
+                    style={{ color: 'white', backgroundColor: '#075e54', display: 'flex', alignItems: 'center' }}
                   >
                     <img style={{ marginRight: '5px', height: '14px', filter: 'invert(1)' }} src={'/camera.png'} />
                     Analisa Gambar
@@ -275,27 +252,17 @@ const isOpenCamera = searchParams.get('camera') === 'open';
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-          disabled={isLoading != ''}
+          disabled={isLoading !== ''}
         />
-
-        <button onClick={() => sendMessage()} style={{marginLeft: '-40px'}}disabled={isLoading!=''}>
-          <img
-            src="/send.png"
-            alt="Kirim"
-            style={{ height: '20px', filter: 'invert(1)' }}
-          />
+        <button onClick={() => sendMessage()} style={{ marginLeft: '-40px' }} disabled={isLoading !== ''}>
+          <img src="/send.png" alt="Kirim" style={{ height: '20px', filter: 'invert(1)' }} />
         </button>
-
-        <button onClick={() => setSearchParams({ camera: 'open' })} disabled={isLoading!=''}>
-          <img
-            src="/camera.png"
-            alt="Kamera"
-            style={{ height: '18px', filter: 'invert(1)' }}
-          />
+        <button onClick={() => setSearchParams({ camera: 'open' })} disabled={isLoading !== ''}>
+          <img src="/camera.png" alt="Kamera" style={{ height: '18px', filter: 'invert(1)' }} />
         </button>
       </div>
 
-      {isPoppedUp !== '' &&
+      {isPoppedUp !== '' && (
         <div className={styles.PopUp}>
           <div className={`${styles.message} ${styles['bot']}`}>
             Untuk bisa membantu Anda lebih jauh, boleh saya tahu nama dan nomor telepon Anda?
@@ -326,7 +293,6 @@ const isOpenCamera = searchParams.get('camera') === 'open';
                   }}
                 />
               </div>
-
               <div
                 className={styles.nextButton}
                 onClick={() => {
@@ -336,7 +302,11 @@ const isOpenCamera = searchParams.get('camera') === 'open';
                     sessionData.phoneNumber = phoneNumber;
                     sessionStorage.setItem('session', JSON.stringify(sessionData));
                     setIsPoppedUp('');
-                    sendMessage(isPoppedUp);
+                    if (typeof isPoppedUp === 'string' && isPoppedUp.startsWith('data:image/')) {
+                      handleUploadImage(isPoppedUp);
+                    } else {
+                      sendMessage(isPoppedUp);
+                    }
                   }
                 }}
               >
@@ -345,7 +315,7 @@ const isOpenCamera = searchParams.get('camera') === 'open';
             </div>
           </div>
         </div>
-      }
+      )}
 
       {isOpenCamera && (
         <Camera
