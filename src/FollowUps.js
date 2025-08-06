@@ -1,4 +1,3 @@
-// FollowUps.js
 import React, { useState } from 'react';
 import styles from './FollowUps.module.css';
 
@@ -46,9 +45,38 @@ const FollowUps = ({ data: initialData }) => {
     }
   };
 
+  // Gabungkan data berdasarkan contact_info
+  const mergedDataMap = new Map();
+
+  data.forEach(user => {
+    const key = user.contact_info;
+
+    if (!mergedDataMap.has(key)) {
+      mergedDataMap.set(key, {
+        ...user,
+        notesList: [{
+          note: user.notes,
+          created_at: user.created_at
+        }]
+      });
+    } else {
+      const existing = mergedDataMap.get(key);
+      existing.notesList.push({
+        note: user.notes,
+        created_at: user.created_at
+      });
+
+      // Prioritaskan status tertinggi
+      existing.issuccess = existing.issuccess || user.issuccess;
+      existing.isfollowup = existing.issuccess ? false : (existing.isfollowup || user.isfollowup);
+    }
+  });
+
+  const mergedData = Array.from(mergedDataMap.values());
+
   // Filter & Sort
   const now = new Date();
-  const filteredData = data
+  const filteredData = mergedData
     .filter(user => {
       switch (statusFilter) {
         case 'pending':
@@ -62,7 +90,8 @@ const FollowUps = ({ data: initialData }) => {
       }
     })
     .filter(user => {
-      const created = new Date(user.created_at);
+      const latestNote = user.notesList[user.notesList.length - 1];
+      const created = new Date(latestNote.created_at);
       switch (dateFilter) {
         case 'today':
           return created.toDateString() === now.toDateString();
@@ -75,9 +104,9 @@ const FollowUps = ({ data: initialData }) => {
       }
     })
     .sort((a, b) => {
-      const dateA = new Date(a.created_at);
-      const dateB = new Date(b.created_at);
-      return sortOrder === 'latest' ? dateB - dateA : dateA - dateB;
+      const aDate = new Date(a.notesList[a.notesList.length - 1].created_at);
+      const bDate = new Date(b.notesList[b.notesList.length - 1].created_at);
+      return sortOrder === 'latest' ? bDate - aDate : aDate - bDate;
     });
 
   return (
@@ -139,7 +168,7 @@ const FollowUps = ({ data: initialData }) => {
           </div>
         ) : (
           filteredData.map(user => (
-            <div key={user.id} className={styles.card}>
+            <div key={user.contact_info} className={styles.card}>
               <div className={styles.cardHeader}>
                 <h3 className={styles.userName}>{user.name}</h3>
                 <span className={styles.statusBadge}>
@@ -154,17 +183,20 @@ const FollowUps = ({ data: initialData }) => {
               </div>
               
               <div className={styles.cardContent}>
-                <p className={styles.notes}>{user.notes}</p>
+                <ul className={styles.notesList}>
+                  {user.notesList.map((entry, index) => (
+                    <li key={index}>
+                      <strong>{new Date(entry.created_at).toLocaleString('id-ID', {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                        timeZone: 'Asia/Jakarta'
+                      })}:</strong> {entry.note}
+                    </li>
+                  ))}
+                </ul>
                 <div className={styles.contactInfo}>
                   <span className={styles.contactLabel}>Contact:</span>
                   <span className={styles.contactValue}>{user.contact_info}</span>
-                </div>
-                <div className={styles.dateInfo}>
-                  {new Date(user.created_at).toLocaleString('id-ID', {
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                    timeZone: 'Asia/Jakarta'
-                  })}
                 </div>
               </div>
 
