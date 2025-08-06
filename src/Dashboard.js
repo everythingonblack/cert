@@ -15,13 +15,18 @@ import NotificationPrompt from './NotificationPrompt';
 const Dashboard = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const chartRef = useRef(null);
-  const chartInstanceRef = useRef(null);
+  const weeklyChartRef = useRef(null);
+  const allTimeChartRef = useRef(null);
+  const weeklyChartInstanceRef = useRef(null);
+  const allTimeChartInstanceRef = useRef(null);
+
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [allTimeData, setAllTimeData] = useState([]);
+
   const [conversations, setConversations] = useState([]);
   const [followUps, setFollowUps] = useState([]);
   const [discussedTopics, setDiscussedTopics] = useState([]);
   const [modalContent, setModalContent] = useState(null);
-  const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(true); // ⬅️ Tambahkan state loading
   const [fileList, setFileList] = useState([]);
   const [selectedKeys, setSelectedKeys] = useState([]);
@@ -177,6 +182,115 @@ const Dashboard = () => {
     };
   }, []);
 
+  // Helper parse data function
+function parseGraphData(graph) {
+  const prefixLabelMap = {
+    WEB: 'Web App',
+    TGG: 'Telegram',
+    WGG: 'Whatsapp',
+    IGG: 'Instagram',
+  };
+  const prefixColors = {
+    WEB: { border: '#e2b834', background: 'rgba(226,184,52,0.6)' },
+    TGG: { border: '#24A1DE', background: 'rgba(36,161,222,0.6)' },
+    WGG: { border: '#25d366', background: 'rgba(37,211,102,0.6)' },
+    IGG: { border: '#d62976', background: 'rgba(214,41,118,0.6)' },
+  };
+
+  const rawDataArray = Object.entries(graph).map(([date, sesi]) => ({
+    hour: date,
+    sesi,
+  }));
+
+  rawDataArray.sort((a, b) => new Date(a.hour) - new Date(b.hour));
+
+  const prefixes = Object.keys(prefixLabelMap);
+
+  // Format label: tanggal + nama bulan singkat Indonesia
+  const bulanIndoSingkat = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const labels = rawDataArray.map(d => {
+    const date = new Date(d.hour);
+    const tgl = date.getDate().toString().padStart(2, '0');
+    const bln = bulanIndoSingkat[date.getMonth()];
+    return `${tgl} ${bln}`;
+  });
+
+  const counts = {};
+  prefixes.forEach(prefix => {
+    counts[prefix] = labels.map(() => 0);
+  });
+
+  rawDataArray.forEach(({ sesi }, index) => {
+    prefixes.forEach(prefix => {
+      if (typeof sesi[prefix] === 'number') {
+        counts[prefix][index] = sesi[prefix];
+      }
+    });
+  });
+
+  const datasets = prefixes.map(prefix => ({
+    label: prefixLabelMap[prefix],
+    data: counts[prefix],
+    borderColor: prefixColors[prefix].border,
+    backgroundColor: prefixColors[prefix].background,
+    fill: true,
+    tension: 0.3,
+  }));
+
+  return { labels, datasets };
+}
+
+
+  // Effect buat render weekly chart
+  useEffect(() => {
+    if (!weeklyData.labels || !weeklyChartRef.current) return;
+
+    if (weeklyChartInstanceRef.current) {
+      weeklyChartInstanceRef.current.destroy();
+    }
+
+    const ctx = weeklyChartRef.current.getContext('2d');
+    weeklyChartInstanceRef.current = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: weeklyData.labels,
+        datasets: weeklyData.datasets,
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' },
+        },
+        scales: { y: { beginAtZero: true } },
+      },
+    });
+  }, [weeklyData]);
+
+  // Effect buat render all-time chart
+  useEffect(() => {
+    if (!allTimeData.labels || !allTimeChartRef.current) return;
+
+    if (allTimeChartInstanceRef.current) {
+      allTimeChartInstanceRef.current.destroy();
+    }
+
+    const ctx = allTimeChartRef.current.getContext('2d');
+    allTimeChartInstanceRef.current = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: allTimeData.labels,
+        datasets: allTimeData.datasets,
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' },
+        },
+        scales: { y: { beginAtZero: true } },
+      },
+    });
+  }, [allTimeData]);
+
   useEffect(() => {
     const fetchData = async () => {
       const token = localStorage.getItem('token');
@@ -207,13 +321,19 @@ const Dashboard = () => {
         setFollowUps(data[0]?.graph[0]?.json?.result?.interested_users)
         setFileList(data[0]?.files)
         setUpdateDetected(data[1]?.updateDetected)
+
+
+    const result = data[0].graph[0].json.result;
+
+    setWeeklyData(parseGraphData(result.weekly_graph || {}));
+    setAllTimeData(parseGraphData(result.all_time_graph || {}));
+        
         const graphObj = data[0]?.graph[0]?.json?.result?.graph;
         console.log(graphObj)
         const rawDataArray = Object.entries(graphObj).map(([hour, sesi]) => ({
           hour,
           sesi,
         }));
-        setRawData(rawDataArray);
 
         let totalSessions = new Set();
         let botMessages = 0;
@@ -320,98 +440,6 @@ const Dashboard = () => {
     setModalContent(<DiscussedTopics topics={discussedTopics} />);
   };
 
-  useEffect(() => {
-    if (!rawData.length) return;
-
-    const ctx = chartRef.current?.getContext('2d');
-    if (!ctx) return;
-
-    if (chartInstanceRef.current) {
-      chartInstanceRef.current.destroy();
-    }
-
-    const prefixLabelMap = {
-      WEB: 'Web App',
-      TGG: 'Telegram',
-      WGG: 'Whatsapp',
-      IGG: 'Instagram',
-    };
-
-    const prefixColors = {
-      WEB: { border: '#e2b834', background: 'rgba(226,184,52,0.6)' },
-      TGG: { border: '#24A1DE', background: 'rgba(36,161,222,0.6)' },
-      WGG: { border: '#25d366', background: 'rgba(37,211,102,0.6)' },
-      IGG: { border: '#d62976', background: 'rgba(214,41,118,0.6)' },
-    };
-
-    const prefixes = Object.keys(prefixLabelMap);
-    const parsedHours = rawData.map(d => new Date(d.hour));
-    parsedHours.sort((a, b) => a - b);
-
-    // Extract only the date (no timezone shifting)
-    const getDateStr = date => date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0') + '-' + date.getDate().toString().padStart(2, '0');
-
-
-    const hours = parsedHours.map((date, index) => {
-      const timeStr = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
-      return index === parsedHours.length - 1 ? 'Now' : timeStr;
-    });
-
-    const counts = {};
-    prefixes.forEach(prefix => {
-      counts[prefix] = hours.map(() => 0);
-    });
-
-    rawData.forEach(({ sesi }, index) => {
-      prefixes.forEach(prefix => {
-        if (Array.isArray(sesi[prefix])) {
-          counts[prefix][index] = sesi[prefix].length;
-        }
-      });
-    });
-
-    const datasets = prefixes.map(prefix => ({
-      label: prefixLabelMap[prefix],
-      data: counts[prefix],
-      borderColor: prefixColors[prefix].border,
-      backgroundColor: prefixColors[prefix].background,
-      fill: true,
-      tension: 0.3,
-    }));
-
-    chartInstanceRef.current = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: hours,
-        datasets,
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            display: true,
-            position: 'bottom',
-            labels: {
-              boxWidth: 15
-            }
-          },
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-          },
-          x: {
-            ticks: {
-              font: {
-                size: 10, // 👈 set your desired font size here
-              },
-            },
-          },
-        },
-      },
-    });
-  }, [rawData]);
-
   const handleDeleteFile = async (key) => {
     if (!window.confirm(`Yakin ingin menghapus "${key}"?`)) return;
     const token = localStorage.getItem('token');
@@ -437,7 +465,7 @@ const Dashboard = () => {
     for (const key of selectedKeys) {
       try {
         const response = await fetch(
-          `https://bot.kediritechnopark.com/webhook/dermalounge/files/download?key=${encodeURIComponent(key)}`,
+          `https://bot.kediritechnopark.com/webhook/files/download?key=${encodeURIComponent(key)}`,
           {
             method: 'GET',
             headers: {
@@ -479,7 +507,7 @@ const Dashboard = () => {
       const formData = new FormData();
       formData.append('file', file, file.name);
 
-      const response = await fetch('https://bot.kediritechnopark.com/webhook/dermalounge/files/upload', {
+      const response = await fetch('https://bot.kediritechnopark.com/webhook/files/upload', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -527,7 +555,7 @@ const Dashboard = () => {
     for (const key of selectedKeys) {
       try {
         const response = await fetch(
-          `https://bot.kediritechnopark.com/webhook/dermalounge/files/delete?key=${encodeURIComponent(key)}`,
+          `https://bot.kediritechnopark.com/webhook/files/delete?key=${encodeURIComponent(key)}`,
           {
             method: 'DELETE',
             headers: {
@@ -641,7 +669,16 @@ const Dashboard = () => {
 
       <div className={styles.chartSection}>
         <h2 className={styles.chartTitle}>Interactions</h2>
-        <canvas ref={chartRef}></canvas>
+
+      <section style={{ marginBottom: '40px' }}>
+        <h2 className={styles.chartTitle}>Weekly Graph</h2>
+        <canvas ref={weeklyChartRef}></canvas>
+      </section>
+
+      <section> 
+        <h2 className={styles.chartTitle}>All Time Graph</h2>
+        <canvas ref={allTimeChartRef}></canvas>
+      </section>
       </div>
       <div className={styles.chartSection}>
         <h2 className={styles.chartTitle}>Update AI data</h2>

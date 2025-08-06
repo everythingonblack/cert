@@ -45,7 +45,7 @@ const FollowUps = ({ data: initialData }) => {
     }
   };
 
-  // Gabungkan data berdasarkan contact_info
+  // Gabungkan data berdasarkan contact_info dan hilangkan note yang sama secara berurutan
   const mergedDataMap = new Map();
 
   data.forEach(user => {
@@ -61,10 +61,13 @@ const FollowUps = ({ data: initialData }) => {
       });
     } else {
       const existing = mergedDataMap.get(key);
-      existing.notesList.push({
-        note: user.notes,
-        created_at: user.created_at
-      });
+      const lastNote = existing.notesList[existing.notesList.length - 1];
+      if (!lastNote || lastNote.note !== user.notes) {
+        existing.notesList.push({
+          note: user.notes,
+          created_at: user.created_at
+        });
+      }
 
       // Prioritaskan status tertinggi
       existing.issuccess = existing.issuccess || user.issuccess;

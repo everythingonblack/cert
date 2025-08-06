@@ -34,7 +34,7 @@ const isOpenCamera = searchParams.get('camera') === 'open';
   }, [existingConversation]);
 
   useEffect(() => {
-    if (!localStorage.getItem('session')) {
+    if (!sessionStorage.getItem('session')) {
       function generateUUID() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
           const r = Math.random() * 16 | 0;
@@ -46,7 +46,7 @@ const isOpenCamera = searchParams.get('camera') === 'open';
       const sessionId = generateUUID();
       const dateNow = new Date().toISOString();
 
-      localStorage.setItem('session', JSON.stringify({ sessionId: sessionId, lastSeen: dateNow }))
+      sessionStorage.setItem('session', JSON.stringify({ sessionId: sessionId, lastSeen: dateNow }))
     }
   }, []);
 
@@ -65,7 +65,7 @@ const isOpenCamera = searchParams.get('camera') === 'open';
   }
 
   const askToBot = async ({ type = 'text', content, tryCount = 0 }) => {
-    const session = JSON.parse(localStorage.getItem('session'));
+    const session = JSON.parse(sessionStorage.getItem('session'));
     if (!session || !session.sessionId) return;
 
     let body;
@@ -143,7 +143,7 @@ const isOpenCamera = searchParams.get('camera') === 'open';
     const message = textOverride || input.trim();
     if (message === '') return;
 
-    const session = JSON.parse(localStorage.getItem('session'));
+    const session = JSON.parse(sessionStorage.getItem('session'));
     if ((!session || !session.name || !session.phoneNumber) && messages.length > 2) {
       setIsPoppedUp(message);
       setInput('');
@@ -331,10 +331,10 @@ const isOpenCamera = searchParams.get('camera') === 'open';
                 className={styles.nextButton}
                 onClick={() => {
                   if (name.length > 2 && phoneNumber.length >= 10) {
-                    const sessionData = JSON.parse(localStorage.getItem('session')) || {};
+                    const sessionData = JSON.parse(sessionStorage.getItem('session')) || {};
                     sessionData.name = name;
                     sessionData.phoneNumber = phoneNumber;
-                    localStorage.setItem('session', JSON.stringify(sessionData));
+                    sessionStorage.setItem('session', JSON.stringify(sessionData));
                     setIsPoppedUp('');
                     sendMessage(isPoppedUp);
                   }

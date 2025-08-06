@@ -11,7 +11,7 @@ const ProfileTab = () => {
     const [profileTemp, setProfileTemp] = useState({});
 
     const licenses = [
-        { id: 1, type: "Monthly Subscription", number: "DRML-2025-AI001", validUntil: "July 31 2025" },
+        { id: 1, type: "MONTHLY SUBSCRIPTION", number: "DRML-2025-AI001", validUntil: "Aug 31 2025" },
     ];
 
     useEffect(() => {
@@ -218,9 +218,9 @@ const ProfileTab = () => {
                 <div className={styles.licenseCards}>
                     {licenses.map((item) => (
                         <div className={styles.licenseCard} key={item.id}>
-                            <p><strong>{item.type}</strong></p>
+                            <p><strong>CURRENT PLAN</strong></p>
                             <p>{item.number}</p>
-                            <p><strong>Free License </strong>Valid until: {item.validUntil}</p>
+                            <p><strong style={{fontSize: '12px'}}>{item.type} </strong>Valid until: {item.validUntil}</p>
                         </div>
                     ))}
                 </div>
